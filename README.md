@@ -1,20 +1,20 @@
 # minutes-of-meeting
 A web application to manage minutes of meeting. Developed using AngularJS, NodeJS &amp; MongoDB.
 
+##Node JS
 Navigate to the project folder and run the following command:
 $node server.js
 
+##Launch Application
 The application can be accessed at http://localhost:3000/
 
+##MongoDB
 Start the MongoDB server: $mongod --config <absolute mongodb config file path>.config
 Contents of config file
-##store data here
-dbpath=D:\mongodb\data
+dbpath=D:\mongodb\data <store data here>
  
-##all output go here
-logpath=D:\mongodb\log\mongo.log
+logpath=D:\mongodb\log\mongo.log <all output go here>
  
-##log read and write operations
-diaglog=3
+diaglog=3 <log read and write operations>
 
 
