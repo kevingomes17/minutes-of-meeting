@@ -1,0 +1,58 @@
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-3">
+			<div ng-if="list.length == 0">
+				<a href="#/mom/create">Create MOM</a>
+			</div>
+			<div ng-if="list.length > 0">
+				<input type="text" class="form-control" placeholder="Search people, project, meeting title.." ng-model="searchmom"/> <br/>
+				<ul style="padding-left: 0;">
+					<li class="list-group-item" ng-repeat="mom in list | filter:searchmom | orderBy : 'createdOn' : true ">
+						<span style="cursor: pointer;" ng-click="view(mom)">{{mom.title}} [{{mom.createdOn.format(dateFormat)}}], <strong>Project:</strong> {{mom.project.name}}</span>
+						<span class="actions" style="float: right;">
+							<a href="#/mom/edit/{{mom._id}}"><span class="glyphicon glyphicon-pencil"></span></a>
+						</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="col-md-9">
+			<div ng-if="selectedMOM == null">-Select MOM on the left to view details here.-</div>
+			<div ng-if="selectedMOM != null">
+				<div id="mom-content">
+				<h3>{{selectedMOM.title}} [{{selectedMOM.createdOn.format('MM/DD/YYYY')}}]</h3><hr/>
+				<div class="field-wrapper">
+					<label>Project: </label> {{selectedMOM.project.name}}
+				</div>
+				<div class="field-wrapper">
+					<label>Minutes Taker: </label> {{selectedMOM.minutesTaker.name}} ({{selectedMOM.minutesTaker.email}})
+				</div>
+				<div class="field-wrapper">
+					<label>Attendees:</label><br/>
+					<ul>
+						<li ng-repeat="attendee in selectedMOM.attendees">{{attendee.name}} ({{attendee.email}})</li>
+					</ul>
+				</div>
+				<div class="field-wrapper">
+					<label>Items:</label><br/>
+					<table class="table">
+						<tr ng-repeat="item in selectedMOM.items">
+							<td width="120">{{item.category}}</td>
+							<td>
+								<span ng-if="!angular.equals(item.type, '')">{{item.type}}:</span> <span ng-bind-html="item.description"></span>
+							</td>
+							<td width="300" ng-if="!angular.equals(item.owner, null) || !angular.equals(item.status, '') || !angular.equals(item.dueDate, '')">
+								Owner: {{item.owner.initials}}, Status: {{item.status}} 
+								<span ng-if="!angular.equals(item.dueDate, '')">, Due: {{item.dueDate.format('MM/DD/YYYY')}}</span>
+							</td>
+						</tr>
+					</table>
+				</div>
+				</div>
+				<button class="btn btn-primary btn-sm" ng-click="print()">Print</button>
+				<button class="btn btn-primary btn-sm" ng-click="print()">Save as PDF</button>
+				<a href="mailto:{{selectedMOM.mailtoURL}}" class="btn btn-primary btn-sm">Open Email Client</a>
+			</div>
+		</div>
+	</div>
+</div>

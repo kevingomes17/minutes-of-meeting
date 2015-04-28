@@ -1,0 +1,49 @@
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-12">
+			<h3>Team Members <span class="label label-default" style="cursor: pointer;" ng-click="resetForm()">Add Member</span></h3><hr/>
+			
+			<div class="row">
+				<div class="col-md-3">
+					<div ng-if="team.length == 0">-No Team Members available-</div>
+					<ul ng-if="team.length > 0" class="list-group">
+						<li class="list-group-item" ng-repeat="member in team" ng-click="edit(member)" style="cursor: pointer;">
+							<h4 class="list-group-item-heading">{{member.name}}</h4>
+							<p class="list-group-item-text">{{member.email}}</p>		
+						</li>
+					</ul>
+				</div>
+				<div class="col-md-9">
+					<h4>{{form.title}}</h4> 
+					<div class="row">
+						<div class="col-md-3">
+							<input type="text" class="form-control" placeholder="Name"  ng-model="form.member.name" />
+						</div>
+						<div class="col-md-3">
+							<input type="text" class="form-control" placeholder="Email"  ng-model="form.member.email" />
+						</div>
+						<div class="col-md-3">
+							<input type="text" class="form-control" placeholder="Initials"  ng-model="form.member.initials" />
+						</div>
+					</div> <br/>
+					<div>
+						<input type="text" class="form-control" placeholder="Skills"  ng-model="form.member.skills" />
+					</div> <br/>
+					<div ng-if="form.member._id != null">
+						<label>Is login available:</label> <span ng-if="form.member.password.length > 0">Yes</span>
+						<span ng-if="!(form.member.password.length > 0)">No</span>
+						<br/>
+					</div> 
+					
+					<div style="text-align: right; padding-top: 5px; border-top: 1px solid #eee;">
+						<span class="label label-danger">{{form.errorMessage}}</span>
+						<span class="label label-success">{{form.successMessage}}</span>
+					
+						<button class="btn btn-danger" ng-if="form.member._id != null" ng-click="deleteMember()">Delete</button>
+						<button class="btn btn-primary" ng-click="saveMember()">Save</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

@@ -1,0 +1,85 @@
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-12">
+			<h3 class="modal-title">{{form.title}} <span class="label label-default" style="cursor: pointer;" ng-click="gotoPath('/dashboard')">Back to Dashboard</span></h3><hr/>
+			
+			<form id="mom-form" name="MomForm">
+			<div class="row">
+				<div class="col-md-3">
+					<!--input type="text" ng-model="mom.project" placeholder="Project" class="form-control"/-->
+					<select ng-required="true" name="project" class="form-control" ng-disabled="form.action == 'edit'" ng-change="form.populateAttendeesFromProject()" ng-model="mom.project" ng-options="project.name for project in projects track by project._id"></select>
+				</div>
+				<div class="col-md-3">
+					<input type="text" ng-model="mom.title" placeholder="Title" class="form-control"/>
+				</div>
+				<div class="col-md-3">
+					<input ng-required="true" type="text" ng-model="form.minutesTaker" placeholder="Minutes Taker" class="form-control"
+						typeahead="taker.name for taker in teamMembers | filter:$viewValue | limitTo:8"
+						typeahead-on-select="form.minutesTakerSelected($item, $model, $label)"/>					
+				</div>
+				<div class="col-md-3">
+					<input type="text" ng-model="form.attendeeName" placeholder="Type to add Attendees.." class="form-control"
+					typeahead="attendee.name for attendee in teamMembers | filter:$viewValue | limitTo:8"
+					typeahead-on-select="form.attendeeSelected($item, $model, $label)"/>
+				</div>
+			</div>
+			<div class="attendees-wrapper">				
+				<strong>Attendees: </strong> <span ng-if="form.attendees.length == 0">-NONE-</span>
+				<span class="label label-default" ng-repeat="selAtt in form.attendees" >
+					{{selAtt.name}} ({{selAtt.email}}) 
+					<span class="badge" style="cursor: pointer;" ng-click="form.removeAttendee(selAtt)">x</span>
+				</span>
+			</div>
+			
+			<!--span class="glyphicon glyphicon-sort"></span-->
+			<div class="toolbar">
+				<button class="btn btn-primary btn-sm" ng-click="form.addRow()">Add Row</button>
+				<button class="btn btn-primary btn-sm" ng-click="form.removeEmpty()" ng-disabled="mom.items.length < 2">Remove Empty</button>
+				<button class="btn btn-primary btn-sm" ng-disabled="form.selectedRow == null" ng-click="form.moveRowUp()">Move Up</button>
+				<button class="btn btn-primary btn-sm" ng-disabled="form.selectedRow == null" ng-click="form.moveRowDown()">Move Down</button>
+				<button class="btn btn-danger btn-sm" ng-disabled="form.selectedRow == null" ng-click="form.removeRow()">Delete</button>
+			</div>
+			<table class="table">				
+				<tbody>
+					<tr ng-init="rowNum = $index" ng-repeat="row in mom.items">
+						<td width="20"><input type="checkbox" ng-click="form.selectedRow = row" ng-checked="angular.equals(row, form.selectedRow)"></td>
+						<td width="80"><input type="text" class="form-control" placeholder="Category" ng-model="row.category" 
+							ng-dblclick="form.addToCategoryDict(row.category)" typeahead="cat for cat in form.categories | filter:$viewValue | limitTo:8"/>
+						</td>
+						<td width="80"><input type="text" class="form-control" placeholder="Due Date" ng-model="row.dueDate" 
+							datepicker-popup="{{datepickerFormat}}" is-open="row.showDatePicker" ng-click="form.openDatePicker($event, row)" />
+						</td>
+						<td>
+							<div style="width: 95%;" ng-if="row.richText == true" placeholder="Description" ng-model="row.description" 
+								text-angular="text-angular" ta-toolbar="[['bold', 'ul', 'ol', 'html']]"
+								ng-focus="form.addRow()"></div>
+							<input style="width: 95%;" ng-if="row.richText == false" type="text" class="form-control" placeholder="Description" ng-model="row.description" 
+								ng-focus="form.addRow()"/>
+							<span class="glyphicon glyphicon-resize-full" ng-if="row.richText == false" ng-click="row.richText = true"></span>
+						</td>
+						<td width="50"><input type="text" class="form-control" placeholder="Owner" ng-model="row.owner" 
+							typeahead="owner.initials for owner in teamMembers | filter:$viewValue | limitTo:8"
+							typeahead-on-select="form.ownerSelected($item, $model, $label, row)"/>
+						</td>
+						<td width="80"><input type="text" class="form-control" placeholder="Status" ng-model="row.status" 
+							typeahead="status for status in form.statuses | filter:$viewValue | limitTo:8"/>
+						</td>
+						<td width="80"><input type="text" class="form-control" placeholder="Type" ng-model="row.type" 
+							typeahead="type for type in form.types | filter:$viewValue | limitTo:8"/>
+						</td>						
+					</tr>
+				</tbody>
+			</table>
+		</form>
+		
+			<div class="buttons" style="text-align: right;">
+				<span class="label label-success">{{form.successMessage}}</span>
+				<span class="label label-danger">{{form.errorMessage}}</span>
+				<button class="btn btn-danger" ng-if="form.action == 'edit'" ng-click="delete()">Delete</button>
+				<button class="btn btn-success" ng-if="form.action == 'edit'" ng-click="saveAs()">Save As</button>
+				<button class="btn btn-primary" ng-if="form.action == 'create' || form.action == 'edit'" ng-click="save()">Save</button>			
+			</div>
+		
+		</div>
+	</div>
+</div>
