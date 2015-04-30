@@ -30,6 +30,9 @@ hr {
 #mom-form .table>thead>tr>th {
 	padding: 0;
 }
+table.table {
+	font-size: 14px;
+}
 .attendees-wrapper {
 	margin-top: 2px;
 	overflow: auto; 

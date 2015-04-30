@@ -14,7 +14,9 @@ var mom = require('./server/routes/mom');
 var user = require('./server/routes/api-user');
 
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/momdb', function(err) {
+var mogodb_uri_heroku = 'mongodb://heroku_app36407401:cl49hr334r57gub9drlavrvl72@ds031792.mongolab.com:31792/heroku_app36407401';
+var mongodb_uri_local = 'mongodb://localhost/momdb';
+mongoose.connect(mongodb_uri_heroku, function(err) {
     if(err) {
         console.log('connection error', err);
     } else {

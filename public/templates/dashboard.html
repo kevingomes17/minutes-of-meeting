@@ -22,22 +22,22 @@
 				<div id="mom-content">
 				<h3>{{selectedMOM.title}} [{{selectedMOM.createdOn.format('MM/DD/YYYY')}}]</h3><hr/>
 				<div class="field-wrapper">
-					<label>Project: </label> {{selectedMOM.project.name}}
+					<label><strong>Project:</strong></label> {{selectedMOM.project.name}}
 				</div>
 				<div class="field-wrapper">
-					<label>Minutes Taker: </label> {{selectedMOM.minutesTaker.name}} ({{selectedMOM.minutesTaker.email}})
+					<label><strong>Minutes Taker:</strong></label> {{selectedMOM.minutesTaker.name}} ({{selectedMOM.minutesTaker.email}})
 				</div>
 				<div class="field-wrapper">
-					<label>Attendees:</label><br/>
+					<label><strong>Attendees:</strong></label><br/>
 					<ul>
 						<li ng-repeat="attendee in selectedMOM.attendees">{{attendee.name}} ({{attendee.email}})</li>
 					</ul>
 				</div>
 				<div class="field-wrapper">
-					<label>Items:</label><br/>
+					<label><strong>Items:</strong></label><br/>
 					<table class="table">
 						<tr ng-repeat="item in selectedMOM.items">
-							<td width="120">{{item.category}}</td>
+							<td width="120" valign="top"><u>{{item.category}}</u></td>
 							<td>
 								<span ng-if="!angular.equals(item.type, '')">{{item.type}}:</span> <span ng-bind-html="item.description"></span>
 							</td>
@@ -52,6 +52,7 @@
 				<button class="btn btn-primary btn-sm" ng-click="print()">Print</button>
 				<button class="btn btn-primary btn-sm" ng-click="print()">Save as PDF</button>
 				<a href="mailto:{{selectedMOM.mailtoURL}}" class="btn btn-primary btn-sm">Open Email Client</a>
+				<button class="btn btn-primary btn-sm" clip-copy="copy()" clip-copy-mime-type="text/html">Copy Contents</button>
 			</div>
 		</div>
 	</div>

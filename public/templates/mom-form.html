@@ -61,11 +61,17 @@
 							typeahead="owner.initials for owner in teamMembers | filter:$viewValue | limitTo:8"
 							typeahead-on-select="form.ownerSelected($item, $model, $label, row)"/>
 						</td>
-						<td width="80"><input type="text" class="form-control" placeholder="Status" ng-model="row.status" 
-							typeahead="status for status in form.statuses | filter:$viewValue | limitTo:8"/>
+						<td width="80"><!--input type="text" class="form-control" placeholder="Status" ng-model="row.status" 
+							typeahead="status for status in form.statuses | filter:$viewValue | limitTo:8"/-->
+							<select class="form-control" ng-model="row.status" ng-options="status for status in form.statuses">
+								<option value=''>-?-</option>
+							</select>
 						</td>
-						<td width="80"><input type="text" class="form-control" placeholder="Type" ng-model="row.type" 
-							typeahead="type for type in form.types | filter:$viewValue | limitTo:8"/>
+						<td width="80"><!--input type="text" class="form-control" placeholder="Type" ng-model="row.type" 
+							typeahead="type for type in form.types | filter:$viewValue | limitTo:8"/-->
+							<select class="form-control" ng-model="row.type" ng-options="type for type in form.types">
+								<option value=''>-?-</option>
+							</select>
 						</td>						
 					</tr>
 				</tbody>
