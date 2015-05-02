@@ -16,21 +16,29 @@
 				</div> 
 				
 				<div class="col-md-9">
-					<div class="alert alert-warning">Select the MOM whose items need be added to the Report</div>
+					<div class="alert alert-warning" ng-if="selectedMoms.length == 0">Select the MOM whose items need be added to the Report</div>
 					
-					<table class="table" ng-repeat="mom in selectedMoms">
-						<tr ng-repeat="item in mom.items">
-							<td width="150">{{item.category}}</td>
-							<td>
-								<span ng-if="!angular.equals(item.type, '')">{{item.type}}:</span> <span ng-bind-html="item.description"></span>
-							</td>
-							<td width="150" ng-if="!angular.equals(item.status, '')">
-								Status: {{item.status}} 
-							</td>
-						</tr>
-					</table>
+					<div id="mom-content" ng-if="selectedMoms.length > 0">
+						<h4>Report generated on [{{today.format('MM/DD/YYYY')}}]</h4>
+						<table class="table" ng-repeat="mom in selectedMoms">
+							<tr ng-repeat="item in mom.items">
+								<td width="150" valign="top"><u>{{item.category}}</u></td>
+								<td>
+									<span ng-if="!angular.equals(item.type, '')">{{item.type}}:</span> <span ng-bind-html="item.description"></span>
+								</td>
+								<td width="150" ng-if="!angular.equals(item.status, '')" valign="top">
+									Status: {{item.status}} 
+								</td>
+							</tr>
+						</table>
+					</div>
+					
+					<div class="buttons-wrapper" ng-if="selectedMoms.length > 0">
+						<button class="btn btn-primary btn-sm" ng-click="print()">Print</button>
+						<button class="btn btn-primary btn-sm" ng-click="print()">Save as PDF</button>
+						<button class="btn btn-primary btn-sm" clip-copy="copy()" clip-copy-mime-type="text/html">Copy Contents</button>
+					</div>
 				</div>
-				
 			</div>
 		</div>
 	</div>

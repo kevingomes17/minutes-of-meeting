@@ -20,7 +20,7 @@
 			<div ng-if="selectedMOM == null">-Select MOM on the left to view details here.-</div>
 			<div ng-if="selectedMOM != null">
 				<div id="mom-content">
-				<h3>{{selectedMOM.title}} [{{selectedMOM.createdOn.format('MM/DD/YYYY')}}]</h3><hr/>
+				<h4>{{selectedMOM.title}} [{{selectedMOM.createdOn.format('MM/DD/YYYY')}}]</h4><hr/>
 				<div class="field-wrapper">
 					<label><strong>Project:</strong></label> {{selectedMOM.project.name}}
 				</div>

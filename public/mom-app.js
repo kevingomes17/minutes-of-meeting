@@ -718,9 +718,9 @@ MOMApp.controller('ReportsCtrl', function($scope, $location, $filter, $log, $coo
 		projectsRestApi: null
 	};
 	
-	$log.debug($cookies);
-	
 	$scope.init = function() {
+		$scope.today = moment();
+		
 		locals.momRestApi = momService.getRestApi();
 		locals.membersRestApi = teamMembersService.getRestApi();
 		locals.projectsRestApi = projectsService.getRestApi();
@@ -745,27 +745,34 @@ MOMApp.controller('ReportsCtrl', function($scope, $location, $filter, $log, $coo
 		$location.path('/dashboard');
 	};
 	
+	$scope.print = function() {		
+		var printContents = document.getElementById('mom-content').innerHTML;
+		var popupWin = window.open('', '_blank');
+		popupWin.document.open()
+		popupWin.document.write('<html><head><link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css"><link rel="stylesheet" href="lib/font-awesome-4.3.0/css/font-awesome.min.css"><link rel="stylesheet" href="css/styles.css"></head><body onload="window.print()">' + printContents + '</html>');
+		popupWin.document.close();
+	};
+	
+	$scope.copy = function() {
+		var momContent = angular.element(document.getElementById('mom-content'));
+		//$scope.bang = momContent.html();
+		return "<style type='text/css'>label { font-weight: bold; }</style>"+momContent.html();
+		//$log.debug(momContent.text());
+	};
+	
 	$scope.prepareMomForView = function(mom) {
 		mom.project = $filter('filter')($scope.projects, {_id: mom.project})[0];
+		/*
 		mom.minutesTaker = $filter('filter')($scope.teamMembers, {_id: mom.minutesTaker})[0];
 		
-		var mailtoURL = '';
 		for(var i = 0;i < mom.attendees.length;i++) {
 			for(var j = 0;j < $scope.teamMembers.length;j++) {
 				if($scope.teamMembers[j]._id == mom.attendees[i]) {
 					mom.attendees[i] = $scope.teamMembers[j];
-					if(mailtoURL != '') {
-						mailtoURL += ',';
-					}
-					if(!angular.equals(mom.attendees[i].email, '')) {
-						mailtoURL += mom.attendees[i].email;
-					}
 					break;
 				}
 			}
 		}
-		mailtoURL += '&subject='+mom.project.name+': '+mom.title+' ['+mom.createdOn.format('MM/DD/YYYY')+']&body=<copy and paste contents from the Web Page in here>';
-		mom.mailtoURL = mailtoURL;
 		
 		//Update Owner Reference for each of the items.
 		for(var i = 0;i < mom.items.length;i++) {
@@ -779,7 +786,7 @@ MOMApp.controller('ReportsCtrl', function($scope, $location, $filter, $log, $coo
 					break;
 				}
 			}
-		}
+		}*/
 	};
 	
 	$scope.momClicked = function() {
