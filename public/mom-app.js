@@ -226,7 +226,7 @@ MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $time
 				if($scope.teamMembers[j]._id == mom.attendees[i]) {
 					mom.attendees[i] = $scope.teamMembers[j];
 					if(mailtoURL != '') {
-						mailtoURL += ',';
+						mailtoURL += ';';
 					}
 					if(!angular.equals(mom.attendees[i].email, '')) {
 						mailtoURL += mom.attendees[i].email;
