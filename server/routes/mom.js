@@ -2,14 +2,22 @@ var express = require('express');
 var router = express.Router();
 
 var mongoose = require('mongoose');
+var ObjectId = mongoose.Types.ObjectId; 
 var Mom = require('../models/Mom.js');
 
 /* GET /mom listing. */
 router.get('/', function(req, res, next) {
-  Mom.find(function (err, items) {
-    if (err) return next(err);
-    res.jsonp(items);
-  });
+  Mom.find({
+	$or: [
+		{minutesTaker: new ObjectId(req.session.userid)}, 
+		{attendees: new ObjectId(req.session.userid)}
+		//{attendees: {$in:[new ObjectId(req.session.userid)]}}
+	]}, 
+	function (err, items) {
+		if (err) return next(err);
+		res.jsonp(items);
+	});
+  
 });
 
 /* POST /mom */

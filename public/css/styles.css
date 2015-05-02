@@ -51,3 +51,6 @@ table.table {
 .ta-hidden-input {
 	display: none;
 }
+li.active .glyphicon {
+	color: #fff;
+}

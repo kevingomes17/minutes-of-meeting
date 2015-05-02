@@ -7,7 +7,7 @@
 				<div class="col-md-3">
 					<div ng-if="team.length == 0">-No Team Members available-</div>
 					<ul ng-if="team.length > 0" class="list-group">
-						<li class="list-group-item" ng-repeat="member in team" ng-click="edit(member)" style="cursor: pointer;">
+						<li class="list-group-item" ng-repeat="member in team | orderBy : 'name'" ng-click="edit(member)" style="cursor: pointer;" ng-class="{'active': (member._id == form.member._id)}">
 							<h4 class="list-group-item-heading">{{member.name}}</h4>
 							<p class="list-group-item-text">{{member.email}}</p>		
 						</li>
