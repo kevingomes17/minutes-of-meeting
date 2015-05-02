@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-	"start": "node server.js"
+    "start": "node server.js"
   },
   "main": "server.js",
   "dependencies": {
@@ -16,8 +16,10 @@
     "ejs": "^2.3.1",
     "express": "4.x",
     "express-session": "^1.11.1",
+    "migrate": "^0.2.1",
     "mongo-express": "^0.21.0",
     "mongoose": "^4.0.2",
+    "mongoose-migrate": "^0.2.3",
     "morgan": "^1.5.2",
     "serve-favicon": "^2.2.0"
   }

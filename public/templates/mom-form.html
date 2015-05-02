@@ -81,7 +81,7 @@
 			<div class="buttons" style="text-align: right;">
 				<span class="label label-success">{{form.successMessage}}</span>
 				<span class="label label-danger">{{form.errorMessage}}</span>
-				<button class="btn btn-danger" ng-if="form.action == 'edit'" ng-click="delete()">Delete</button>
+				<button class="btn btn-danger" ng-if="form.action == 'edit' && currentUser.isAdmin == true" ng-click="delete()">Delete</button>
 				<button class="btn btn-success" ng-if="form.action == 'edit'" ng-click="saveAs()">Save As</button>
 				<button class="btn btn-primary" ng-if="form.action == 'create' || form.action == 'edit'" ng-click="save()">Save</button>			
 			</div>

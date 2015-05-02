@@ -1,4 +1,4 @@
-var MOMApp = angular.module('MOMApp', ['ngRoute', 'ngResource', 'ngClipboard', 'ui.bootstrap', 'textAngular']);
+var MOMApp = angular.module('MOMApp', ['ngRoute', 'ngResource', 'ngCookies', 'ngClipboard', 'ui.bootstrap', 'textAngular']);
 
 MOMApp.config(['$routeProvider',
   function($routeProvider) {
@@ -36,7 +36,7 @@ MOMApp.config(['ngClipProvider', function(ngClipProvider) {
     ngClipProvider.setPath("bower_components/zeroclipboard/dist/ZeroClipboard.swf");
   }]);
 
-MOMApp.factory('userService', function($http, $q, $log, $timeout, $resource) {
+MOMApp.factory('userService', function($http, $q, $log, $timeout, $resource, $cookies) {
 	var url = '/api/user';
 	var restApi = $resource(url, {
 		callback: 'JSON_CALLBACK'
@@ -50,6 +50,15 @@ MOMApp.factory('userService', function($http, $q, $log, $timeout, $resource) {
 	factory.getRestApi = function() {
 		return restApi;
 	};
+	
+	factory.getUserCookie = function() {
+		return {
+			id: $cookies["userId"],
+			name: $cookies["userName"],
+			email: $cookies["userEmail"],
+			isAdmin: ($cookies["userIsAdmin"] == "true")
+		};
+	}; 
 	
 	return factory;
 });
@@ -139,6 +148,7 @@ MOMApp.factory('teamMembersService', function($http, $q, $log, $resource) {
 		var member = {
 			name: '',
 			email: '',
+			password: '',
 			initials: '',
 			skills: '',
 			createdOn: moment(),
@@ -150,27 +160,34 @@ MOMApp.factory('teamMembersService', function($http, $q, $log, $resource) {
 	return factory;
 }); 
 
-MOMApp.controller('HeaderCtrl', function($scope, $modal, $log, $filter, userService) {	
+MOMApp.controller('HeaderCtrl', function($scope, $modal, $log, $filter, $cookies, userService) {	
 	var locals = {
 		userRestApi: userService.getRestApi()
 	};
 	
+	$scope.currentUser = userService.getUserCookie();
+	
 	$scope.logout = function() {
 		locals.userRestApi.logout(function(res) {
 			if(res.success) {
+				$cookies["userEmail"] = null;
+				$cookies["userName"] = null;
+				$cookies["userId"] = null;
+				$cookies["userIsAdmin"] = null;
+				
 				window.location.reload();
 			}
 		});
 	};
 });
 
-MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $timeout, momService, projectsService, teamMembersService, userService) {	
+MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $timeout, $cookies, momService, projectsService, teamMembersService, userService) {	
 	var locals = {
 		restApi: null,
 		projectsRestApi: null,
 		membersRestApi: null
 	};
-	
+		
 	$scope.init = function() {
 		locals.restApi = momService.getRestApi();
 		locals.projectsRestApi = projectsService.getRestApi();
@@ -257,7 +274,7 @@ MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $time
 /**
  * Modal Form Controller.
  */
-MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $location, momService, projectsService, teamMembersService) {
+MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $location, momService, projectsService, teamMembersService, userService) {
 	var locals = {
 		restApi: null,
 		projectsRestApi: null,
@@ -282,6 +299,8 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 				$scope.prepareMomForEdit();
 			});
 		}
+		
+		$scope.currentUser = userService.getUserCookie();
 		
 		$scope.form = {
 			action: action,
@@ -487,7 +506,7 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 	$scope.init();
 });
 
-MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, projectsService, teamMembersService) {
+MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, projectsService, teamMembersService, userService) {
 	var locals = {
 		restApi: null,
 		membersRestApi: null
@@ -505,6 +524,8 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, projectsServic
 			successMessage: '',
 			project: projectsService.getNewProject()
 		};
+		
+		$scope.currentUser = userService.getUserCookie();
 	};
 	
 	$scope.edit = function(project) {
@@ -585,10 +606,11 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, projectsServic
 	$scope.init();
 });
 
-MOMApp.controller('TeamMembersCtrl', function($scope, $log, teamMembersService) {
+MOMApp.controller('TeamMembersCtrl', function($scope, $log, $cookies, teamMembersService, userService) {
 	var locals = {
 		restApi: null
 	};
+	
 	$scope.init = function() {
 		locals.restApi = teamMembersService.getRestApi();		
 		$scope.team = locals.restApi.getAll();
@@ -598,11 +620,13 @@ MOMApp.controller('TeamMembersCtrl', function($scope, $log, teamMembersService) 
 			successMessage: '',
 			member: teamMembersService.getNewMember()
 		};
+		$scope.currentUser = userService.getUserCookie();		
 	};
 	
 	$scope.edit = function(member) {
-		$scope.form.title = 'Update Member';
 		$scope.form.member = member;
+		$scope.form.title = 'Update Member: '+$scope.form.member.name;
+		$scope.form.action = 'edit';
 		$scope.form.successMessage = '';
 		$scope.form.errorMessage = '';
 	};
@@ -619,7 +643,7 @@ MOMApp.controller('TeamMembersCtrl', function($scope, $log, teamMembersService) 
 	$scope.saveMember = function() {
 		if(!angular.equals($scope.form.member.name, '')) {
 			$scope.form.errorMessage = '';
-			if($scope.form.member._id != null) { //PUT				
+			if($scope.form.member._id != null) { //PUT
 				locals.restApi.update({id: $scope.form.member._id}, $scope.form.member, function(res) {
 					//TODO: Show Success message.
 					$scope.form.successMessage = 'Successfully updated Team Member.';
@@ -632,6 +656,7 @@ MOMApp.controller('TeamMembersCtrl', function($scope, $log, teamMembersService) 
 					$scope.form.successMessage = 'Successfully created Team Member.';
 					$scope.form.member = res;
 					$scope.form.title = 'Update Member';
+					$scope.form.action = 'edit';
 					$scope.team.push(res);
 				}, function(err) {
 					$scope.form.errorMessage = 'Error saving Data! ' + err;
@@ -645,13 +670,14 @@ MOMApp.controller('TeamMembersCtrl', function($scope, $log, teamMembersService) 
 	$scope.resetForm = function() {
 		$scope.form.member = teamMembersService.getNewMember();
 		$scope.form.title = 'Add Member';
+		$scope.form.action = 'add';
 		$scope.form.errorMessage = '';
 	};
 	
 	$scope.init();
 });
 
-MOMApp.controller('LoginCtrl', function($scope, $log, userService) {
+MOMApp.controller('LoginCtrl', function($scope, $log, $cookies, userService) {
 	var locals = {
 		restApi: null
 	};
@@ -666,8 +692,11 @@ MOMApp.controller('LoginCtrl', function($scope, $log, userService) {
 	$scope.authenticate = function() {
 		$scope.errorMessage = '';
 		var usersFound = locals.restApi.authenticate({email: $scope.email, password: $scope.password}, function(res) {
-			//$log.debug('baburao', res, res.length);
-			if(usersFound.length > 0) {
+			if(res.length > 0) {
+				$cookies["userEmail"] = res[0].email;
+				$cookies["userName"] = res[0].name;
+				$cookies["userId"] = res[0]._id;
+				$cookies["userIsAdmin"] = (res[0].isAdmin != null) ? res[0].isAdmin : false;
 				window.location.reload();
 			} else {
 				$scope.errorMessage = 'Invalid Username or Password.';
@@ -678,12 +707,14 @@ MOMApp.controller('LoginCtrl', function($scope, $log, userService) {
 	$scope.init();
 });
 
-MOMApp.controller('ReportsCtrl', function($scope, $location, $filter, $log, momService, projectsService, teamMembersService) {
+MOMApp.controller('ReportsCtrl', function($scope, $location, $filter, $log, $cookies, momService, projectsService, teamMembersService) {
 	var locals = {
 		momRestApi: null,
 		membersRestApi: null,
 		projectsRestApi: null
 	};
+	
+	$log.debug($cookies);
 	
 	$scope.init = function() {
 		locals.momRestApi = momService.getRestApi();

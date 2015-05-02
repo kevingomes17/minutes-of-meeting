@@ -35,7 +35,7 @@
 					<div style="text-align: right; padding-top: 5px; border-top: 1px solid #eee;">
 						<span class="label label-danger">{{form.errorMessage}}</span>
 						<span class="label label-success">{{form.successMessage}}</span>
-						<button class="btn btn-danger" ng-if="form.project._id != null" ng-click="deleteProject()">Delete</button>
+						<button class="btn btn-danger" ng-if="form.project._id != null && currentUser.isAdmin == true" ng-click="deleteProject()">Delete</button>
 						<button class="btn btn-primary" ng-click="saveProject()">Save</button>					
 					</div>
 				</div>

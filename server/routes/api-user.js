@@ -13,6 +13,7 @@ router.get('/login', function(req, res, next) {
 		//console.log(items);
 		req.session.userid = items[0]._id;
 		req.session.email = req.query.email;
+		//res.cookie('user', items[0], { maxAge: 900000, httpOnly: true });
 	}
     res.jsonp(items);
   });
@@ -23,6 +24,7 @@ router.get('/logout', function(req, res, next) {
   if(req.session.userid != null) {
     req.session.userid = null;
 	req.session.email = null;
+	//res.clearCookie('user');
 	res.jsonp({success: true, message: 'Successfully logged out.'});    
   } else {
 	res.jsonp({success: false, message: 'Invalid operation!'});

@@ -6,6 +6,7 @@ var TeamMemberSchema = new mongoose.Schema({
   initials: String,
   skills: String,
   password: String,
+  isAdmin: Boolean,
   createdOn: Date,
   createdBy: {type: mongoose.Schema.Types.ObjectId, ref: 'TeamMember'},
   modifiedOn: Date,
