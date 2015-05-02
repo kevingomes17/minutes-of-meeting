@@ -465,11 +465,15 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 		}
 		
 		$scope.mom.createdOn = moment();
-		$scope.mom._id = null;
+		$scope.mom.modifiedBy = null;
+		$scope.mom.modifiedOn = null;
+		//$scope.mom._id = null;
+		delete $scope.mom._id;
 		locals.restApi.save({}, $scope.mom, function(res) {
 			$scope.mom = res;
+			$log.debug(res);
 			$scope.prepareMomForEdit();
-			$scope.form.successMessage = 'Successfully created MOM.';
+			$scope.form.successMessage = 'Successfully cloned MOM.';
 		}, function(err) {
 			$scope.form.errorMessage = 'Error saving Data! ' + err.statusText;
 		});
