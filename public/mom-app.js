@@ -388,20 +388,24 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 	
 	$scope.prepareMomForEdit = function() {
 		$scope.mom.createdOn = moment($scope.mom.createdOn);
-		$scope.mom.project = $filter('filter')($scope.projects, {_id: $scope.mom.project})[0];
+		//$scope.mom.project = $filter('filter')($scope.projects, {_id: $scope.mom.project})[0];
 		$scope.form.title = $scope.mom.title+' - '+$scope.mom.createdOn.format('MM/DD/YYYY')+' ('+$scope.form.action+')';
-		$scope.form.minutesTaker = $filter('filter')($scope.teamMembers, {_id: $scope.mom.minutesTaker})[0].name;
+		$scope.form.minutesTaker = $scope.mom.minutesTaker.name;// $filter('filter')($scope.teamMembers, {_id: $scope.mom.minutesTaker})[0].name;
+		
 		$scope.form.attendees = [];
 		for(var i = 0;i < $scope.mom.attendees.length;i++) {
+			$scope.form.attendees.push($scope.mom.attendees[i]);
+			/*
 			for(var j = 0;j < $scope.teamMembers.length;j++) {
 				if($scope.teamMembers[j]._id == $scope.mom.attendees[i]) {
 					$scope.form.attendees.push($scope.teamMembers[j]);
 					break;
 				}
-			}
+			}*/
 		}
 		
 		//Update Owner Reference for each of the items.
+		/*
 		for(var i = 0;i < $scope.mom.items.length;i++) {
 			for(var j = 0;j < $scope.teamMembers.length;j++) {
 				if($scope.teamMembers[j]._id == $scope.mom.items[i].owner) {
@@ -409,7 +413,7 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 					break;
 				}
 			}
-		}
+		}*/
 	};
 	
 	$scope.resetForm = function() {
@@ -444,7 +448,6 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 		delete $scope.mom._id;
 		locals.restApi.save({}, $scope.mom, function(res) {
 			$scope.mom = res;
-			$log.debug(res);
 			$scope.prepareMomForEdit();
 			$scope.form.successMessage = 'Successfully cloned MOM.';
 		}, function(err) {

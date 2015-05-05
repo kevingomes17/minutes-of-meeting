@@ -34,7 +34,7 @@ router.get('/:id', function(req, res, next) {
   Mom.findById(req.params.id, function (err, post) {
     if (err) return next(err);
     res.jsonp(post);
-  }).populate('project').populate('attendees').populate('items.owner');
+  }).populate('minutesTaker').populate('project').populate('attendees').populate('items.owner');
 });
 
 /* PUT /mom/:id */
