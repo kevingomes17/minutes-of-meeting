@@ -9,7 +9,7 @@ router.get('/', function(req, res, next) {
   Project.find(function (err, items) {
     if (err) return next(err);
     res.jsonp(items);
-  });
+  }).populate('teamMembers');
 });
 
 /* POST /projects */
@@ -26,7 +26,7 @@ router.get('/:id', function(req, res, next) {
   Project.findById(req.params.id, function (err, post) {
     if (err) return next(err);
     res.json(post);
-  });
+  }).populate('teamMembers');
 });
 
 /* PUT /projects/:id */

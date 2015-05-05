@@ -181,20 +181,13 @@ MOMApp.controller('HeaderCtrl', function($scope, $modal, $log, $filter, $cookies
 	};
 });
 
-MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $timeout, $cookies, momService, projectsService, teamMembersService, userService) {	
+MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $timeout, $cookies, momService) {	
 	var locals = {
-		restApi: null,
-		projectsRestApi: null,
-		membersRestApi: null
+		restApi: null
 	};
 		
 	$scope.init = function() {
 		locals.restApi = momService.getRestApi();
-		locals.projectsRestApi = projectsService.getRestApi();
-		locals.membersRestApi = teamMembersService.getRestApi();
-			
-		$scope.teamMembers = locals.membersRestApi.getAll();
-		$scope.projects = locals.projectsRestApi.getAll();
 		
 		$scope.selectedMOM = null;
 		$scope.dateFormat = 'MM/DD/YYYY';
@@ -216,23 +209,14 @@ MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $time
 		$scope.selectedMOM = mom;
 	};
 	
-	$scope.prepareMomForView = function(mom) {
-		mom.project = $filter('filter')($scope.projects, {_id: mom.project})[0];
-		mom.minutesTaker = $filter('filter')($scope.teamMembers, {_id: mom.minutesTaker})[0];
-		
+	$scope.prepareMomForView = function(mom) {		
 		var mailtoURL = '';
 		for(var i = 0;i < mom.attendees.length;i++) {
-			for(var j = 0;j < $scope.teamMembers.length;j++) {
-				if($scope.teamMembers[j]._id == mom.attendees[i]) {
-					mom.attendees[i] = $scope.teamMembers[j];
-					if(mailtoURL != '') {
-						mailtoURL += ';';
-					}
-					if(!angular.equals(mom.attendees[i].email, '')) {
-						mailtoURL += mom.attendees[i].email;
-					}
-					break;
-				}
+			if(mailtoURL != '') {
+				mailtoURL += ';';
+			}
+			if(!angular.equals(mom.attendees[i].email, '')) {
+				mailtoURL += mom.attendees[i].email;
 			}
 		}
 		mailtoURL += '&subject='+mom.project.name+': '+mom.title+' ['+mom.createdOn.format('MM/DD/YYYY')+']&body=<copy and paste contents from the Web Page in here>';
@@ -243,12 +227,6 @@ MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $time
 			//$log.debug($scope.selectedMOM.items[i].dueDate);
 			if(!angular.equals(moment(mom.items[i].dueDate).format(), 'Invalid date')) {
 				mom.items[i].dueDate = moment(mom.items[i].dueDate);
-			}
-			for(var j = 0;j < $scope.teamMembers.length;j++) {
-				if($scope.teamMembers[j]._id == mom.items[i].owner) {
-					mom.items[i].owner = $scope.teamMembers[j];
-					break;
-				}
 			}
 		}
 	};
@@ -262,9 +240,10 @@ MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $time
 	};
 	
 	$scope.copy = function() {
+		$log.debug('bang abc');
 		var momContent = angular.element(document.getElementById('mom-content'));
 		//$scope.bang = momContent.html();
-		return "<style type='text/css'>label { font-weight: bold; }</style>"+momContent.html();
+		return momContent.html();
 		//$log.debug(momContent.text());
 	};
 	
@@ -711,28 +690,21 @@ MOMApp.controller('LoginCtrl', function($scope, $log, $cookies, userService) {
 	$scope.init();
 });
 
-MOMApp.controller('ReportsCtrl', function($scope, $location, $filter, $log, $cookies, momService, projectsService, teamMembersService) {
+MOMApp.controller('ReportsCtrl', function($scope, $location, $filter, $log, $cookies, momService) {
 	var locals = {
-		momRestApi: null,
-		membersRestApi: null,
-		projectsRestApi: null
+		momRestApi: null
 	};
 	
 	$scope.init = function() {
 		$scope.today = moment();
 		
 		locals.momRestApi = momService.getRestApi();
-		locals.membersRestApi = teamMembersService.getRestApi();
-		locals.projectsRestApi = projectsService.getRestApi();
 		
 		$scope.dateFormat = 'MM/DD/YYYY';
-		$scope.teamMembers = locals.membersRestApi.getAll();
-		$scope.projects = locals.projectsRestApi.getAll();
 		
 		$scope.list = locals.momRestApi.getAll({}, function(data) {
 			for(var i = 0;i < $scope.list.length;i++) {
 				$scope.list[i].createdOn = moment($scope.list[i].createdOn);
-				$scope.prepareMomForView($scope.list[i]);
 			}
 			
 			$scope.list = $filter('orderBy')($scope.list, 'createdOn', true);
@@ -758,35 +730,6 @@ MOMApp.controller('ReportsCtrl', function($scope, $location, $filter, $log, $coo
 		//$scope.bang = momContent.html();
 		return "<style type='text/css'>label { font-weight: bold; }</style>"+momContent.html();
 		//$log.debug(momContent.text());
-	};
-	
-	$scope.prepareMomForView = function(mom) {
-		mom.project = $filter('filter')($scope.projects, {_id: mom.project})[0];
-		/*
-		mom.minutesTaker = $filter('filter')($scope.teamMembers, {_id: mom.minutesTaker})[0];
-		
-		for(var i = 0;i < mom.attendees.length;i++) {
-			for(var j = 0;j < $scope.teamMembers.length;j++) {
-				if($scope.teamMembers[j]._id == mom.attendees[i]) {
-					mom.attendees[i] = $scope.teamMembers[j];
-					break;
-				}
-			}
-		}
-		
-		//Update Owner Reference for each of the items.
-		for(var i = 0;i < mom.items.length;i++) {
-			//$log.debug($scope.selectedMOM.items[i].dueDate);
-			if(!angular.equals(moment(mom.items[i].dueDate).format(), 'Invalid date')) {
-				mom.items[i].dueDate = moment(mom.items[i].dueDate);
-			}
-			for(var j = 0;j < $scope.teamMembers.length;j++) {
-				if($scope.teamMembers[j]._id == mom.items[i].owner) {
-					mom.items[i].owner = $scope.teamMembers[j];
-					break;
-				}
-			}
-		}*/
 	};
 	
 	$scope.momClicked = function() {
