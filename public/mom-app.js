@@ -240,7 +240,6 @@ MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $time
 	};
 	
 	$scope.copy = function() {
-		$log.debug('bang abc');
 		var momContent = angular.element(document.getElementById('mom-content'));
 		//$scope.bang = momContent.html();
 		return momContent.html();
@@ -341,12 +340,7 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 				var project = $scope.mom.project;
 				$scope.form.attendees = [];
 				for(var i = 0;i < project.teamMembers.length;i++) {
-					for(var j = 0;j < $scope.teamMembers.length;j++) {
-						if($scope.teamMembers[j]._id == project.teamMembers[i]) {
-							$scope.form.attendees.push($scope.teamMembers[j]);
-							break;
-						}
-					}
+					$scope.form.attendees.push(project.teamMembers[i]);
 				}
 			},
 			
