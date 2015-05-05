@@ -44,7 +44,7 @@ router.put('/:id', function(req, res, next) {
   Mom.findByIdAndUpdate(req.params.id, req.body, function (err, post) {
     if (err) return next(err);
     res.json(post);
-  });
+  }).populate('minutesTaker').populate('project').populate('attendees').populate('items.owner');
 });
 
 /* DELETE /mom/:id */

@@ -388,32 +388,13 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 	
 	$scope.prepareMomForEdit = function() {
 		$scope.mom.createdOn = moment($scope.mom.createdOn);
-		//$scope.mom.project = $filter('filter')($scope.projects, {_id: $scope.mom.project})[0];
 		$scope.form.title = $scope.mom.title+' - '+$scope.mom.createdOn.format('MM/DD/YYYY')+' ('+$scope.form.action+')';
-		$scope.form.minutesTaker = $scope.mom.minutesTaker.name;// $filter('filter')($scope.teamMembers, {_id: $scope.mom.minutesTaker})[0].name;
+		$scope.form.minutesTaker = $scope.mom.minutesTaker.name; 
 		
 		$scope.form.attendees = [];
 		for(var i = 0;i < $scope.mom.attendees.length;i++) {
 			$scope.form.attendees.push($scope.mom.attendees[i]);
-			/*
-			for(var j = 0;j < $scope.teamMembers.length;j++) {
-				if($scope.teamMembers[j]._id == $scope.mom.attendees[i]) {
-					$scope.form.attendees.push($scope.teamMembers[j]);
-					break;
-				}
-			}*/
 		}
-		
-		//Update Owner Reference for each of the items.
-		/*
-		for(var i = 0;i < $scope.mom.items.length;i++) {
-			for(var j = 0;j < $scope.teamMembers.length;j++) {
-				if($scope.teamMembers[j]._id == $scope.mom.items[i].owner) {
-					$scope.mom.items[i].owner = $scope.teamMembers[j];
-					break;
-				}
-			}
-		}*/
 	};
 	
 	$scope.resetForm = function() {
@@ -444,11 +425,11 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 		$scope.mom.createdOn = moment();
 		$scope.mom.modifiedBy = null;
 		$scope.mom.modifiedOn = null;
-		//$scope.mom._id = null;
+		
 		delete $scope.mom._id;
 		locals.restApi.save({}, $scope.mom, function(res) {
-			$scope.mom = res;
-			$scope.prepareMomForEdit();
+			$scope.mom._id = res._id;
+			$scope.form.title = $scope.mom.title+' - '+$scope.mom.createdOn.format('MM/DD/YYYY')+' ('+$scope.form.action+')';
 			$scope.form.successMessage = 'Successfully cloned MOM.';
 		}, function(err) {
 			$scope.form.errorMessage = 'Error saving Data! ' + err.statusText;
@@ -467,8 +448,8 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 		if($scope.mom._id == null) {				
 			locals.restApi.save({}, $scope.mom, function(res) {
 				$scope.form.action = 'edit';
-				$scope.mom = res;
-				$scope.prepareMomForEdit();
+				$scope.mom._id = res._id;
+				$scope.form.title = $scope.mom.title+' - '+$scope.mom.createdOn.format('MM/DD/YYYY')+' ('+$scope.form.action+')';
 				$scope.form.successMessage = 'Successfully created MOM.';
 			}, function(err) {
 				$scope.form.errorMessage = 'Error saving Data! ' + err.statusText;
