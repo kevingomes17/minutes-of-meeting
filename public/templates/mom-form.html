@@ -1,23 +1,23 @@
 <div class="container-fluid">
 	<div class="row">
-		<div class="col-md-12">
+		<div class="col-xs-12">
 			<h3 class="modal-title">{{form.title}} <span class="label label-default" style="cursor: pointer;" ng-click="gotoPath('/dashboard')">Back to Dashboard</span></h3><hr/>
 			
 			<form id="mom-form" name="MomForm">
 			<div class="row">
-				<div class="col-md-3">
+				<div class="col-xs-3">
 					<!--input type="text" ng-model="mom.project" placeholder="Project" class="form-control"/-->
 					<select ng-required="true" name="project" class="form-control" ng-disabled="form.action == 'edit'" ng-change="form.populateAttendeesFromProject()" ng-model="mom.project" ng-options="project.name for project in projects track by project._id"></select>
 				</div>
-				<div class="col-md-3">
+				<div class="col-xs-3">
 					<input type="text" ng-model="mom.title" placeholder="Title" class="form-control"/>
 				</div>
-				<div class="col-md-3">
+				<div class="col-xs-3">
 					<input ng-required="true" type="text" ng-model="form.minutesTaker" placeholder="Minutes Taker" class="form-control"
 						typeahead="taker.name for taker in teamMembers | filter:$viewValue | limitTo:8"
 						typeahead-on-select="form.minutesTakerSelected($item, $model, $label)"/>					
 				</div>
-				<div class="col-md-3">
+				<div class="col-xs-3">
 					<input type="text" ng-model="form.attendeeName" placeholder="Type to add Attendees.." class="form-control"
 					typeahead="attendee.name for attendee in teamMembers | filter:$viewValue | limitTo:8"
 					typeahead-on-select="form.attendeeSelected($item, $model, $label)"/>

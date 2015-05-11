@@ -1,5 +1,8 @@
+<!DOCTYPE html>
 <html ng-app="MOMApp">
 	<head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
 		<link rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap.min.css">
 		<link rel="stylesheet" href="/lib/font-awesome-4.3.0/css/font-awesome.min.css">
 		<link rel="stylesheet" href="/css/styles.css">
@@ -56,14 +59,13 @@
 			</nav>
 		</div> <!-- header -->
 		
+        <span us-spinner="{radius:30, width:8, length: 16}"></span>
 		<div ng-view></div>
-		
+    
 		<footer class="footer">
 			<div class="container">
 				Developed by Kevin Gomes. 2015.
 			</div>
 		</footer>
-    
-        <span us-spinner="{radius:30, width:8, length: 16}"></span>
 	</body>
 </html>
