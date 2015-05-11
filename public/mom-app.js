@@ -245,7 +245,12 @@ MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $time
 		return momContent.html();
 		//$log.debug(momContent.text());
 	};
-	
+    
+    $scope.flashUnavailable = function() {
+        var momContent = angular.element(document.getElementById('mom-content'));
+        window.prompt("Hit Ctrl+C to copy the text. \n\nConsider installing Flash plugin for the browser to be able to Copy text easily.", momContent.html());
+    };
+    
 	$scope.init();
 });
 

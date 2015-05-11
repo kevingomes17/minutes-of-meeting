@@ -52,7 +52,7 @@
 				<button class="btn btn-primary btn-sm" ng-click="print()">Print</button>
 				<button class="btn btn-primary btn-sm" ng-click="print()">Save as PDF</button>
 				<a href="mailto:{{selectedMOM.mailtoURL}}" class="btn btn-primary btn-sm">Open Email Client</a>
-				<button class="btn btn-primary btn-sm" clip-copy="copy()" clip-copy-mime-type="text/html">Copy Contents</button>
+				<button class="btn btn-primary btn-sm" clip-click-fallback="flashUnavailable()" clip-copy="copy()" clip-copy-mime-type="text/html">Copy Contents</button>
 			</div>
 		</div>
 	</div>
