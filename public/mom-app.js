@@ -107,7 +107,7 @@ MOMApp.factory('projectsService', function($http, $q, $log, $resource) {
 	var restApi = $resource(url, {
 		callback: 'JSON_CALLBACK'
 	}, {
-		'getAll': {method: 'JSONP', isArray: true},
+		'getAll': {method: 'JSONP', isArray: true, cache: true},
 		'delete': {method: 'DELETE', url: '/api/projects/:id'},
 		'update': {method: 'PUT', url: '/api/projects/:id'}
 	});
@@ -164,7 +164,7 @@ MOMApp.factory('teamMembersService', function($http, $q, $log, $resource) {
 	var restApi = $resource(url, {
 		callback: 'JSON_CALLBACK'
 	}, {
-		'getAll': {method: 'JSONP', isArray: true},
+		'getAll': {method: 'JSONP', isArray: true, cache: true},
 		'delete': {method: 'DELETE', url: '/api/team-members/:id'},
 		'update': {method: 'PUT', url: '/api/team-members/:id'}
 	});
