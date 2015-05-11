@@ -1,4 +1,4 @@
-var MOMApp = angular.module('MOMApp', ['ngRoute', 'ngResource', 'ngCookies', 'ngClipboard', 'ui.bootstrap', 'textAngular']);
+var MOMApp = angular.module('MOMApp', ['ngRoute', 'ngResource', 'ngCookies', 'ngClipboard', 'ui.bootstrap', 'textAngular', 'ngLoadingSpinner']);
 
 MOMApp.config(['$routeProvider',
   function($routeProvider) {
