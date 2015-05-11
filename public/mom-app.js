@@ -72,8 +72,8 @@ MOMApp.factory('momService', function($http, $q, $log, $timeout, $resource) {
 	var restApi = $resource(url, {
 		callback: 'JSON_CALLBACK'
 	}, {
-		'getAll': {method: 'JSONP', isArray: true},
-		'getById': {method: 'JSONP', url: '/api/mom/:id'},
+		'getAll': {method: 'JSONP', isArray: true, cache: true},
+		'getById': {method: 'JSONP', url: '/api/mom/:id', cache: true},
 		'delete': {method: 'DELETE', url: '/api/mom/:id'},
 		'update': {method: 'PUT', url: '/api/mom/:id'}
 	});
