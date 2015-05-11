@@ -1,7 +1,7 @@
 var MOMApp = angular.module('MOMApp', ['ngRoute', 'ngResource', 'ngCookies', 'ngClipboard', 'ui.bootstrap', 'textAngular', 'ngLoadingSpinner']);
 
 MOMApp.config(['$routeProvider',
-  function($routeProvider) {
+  function($routeProvider) {      
     $routeProvider.
       when('/dashboard', {
         templateUrl: 'templates/dashboard.html',
@@ -18,6 +18,10 @@ MOMApp.config(['$routeProvider',
 	  when('/reports', {
         templateUrl: 'templates/reports.html',
         controller: 'ReportsCtrl'
+      }).
+      when('/mom/view/:momId', {
+        templateUrl: 'templates/mom-view.html',
+        controller: 'MOMViewCtrl'
       }).
       when('/mom/:action', {
         templateUrl: 'templates/mom-form.html',
@@ -128,6 +132,33 @@ MOMApp.factory('projectsService', function($http, $q, $log, $resource) {
 	return factory;
 }); 
 
+MOMApp.factory('windowService', function($log, $window) {
+    var factory = {};
+    
+    var locals = {
+        extrasmall: 'xs',
+        small: 'sm',
+        medium: 'md',
+        large: 'lg'
+    };
+    
+    factory.getScreenType = function() {
+        //$log.debug(angular.element($window.top).width());        
+        var width = angular.element($window.top).width();
+        if(width < 768) {
+            return locals.extrasmall;
+        } else if(width < 992) {
+            return locals.small;   
+        } else if(width < 1200) {
+            return locals.medium;
+        } else {
+            return locals.large;   
+        }
+    };
+    
+    return factory;
+});
+
 MOMApp.factory('teamMembersService', function($http, $q, $log, $resource) {
 	var url = '/api/team-members';
 	var restApi = $resource(url, {
@@ -181,14 +212,17 @@ MOMApp.controller('HeaderCtrl', function($scope, $modal, $log, $filter, $cookies
 	};
 });
 
-MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $timeout, $cookies, momService) {	
+MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $timeout, $cookies, $location, momService, windowService) {	
 	var locals = {
-		restApi: null
+		restApi: null,
+        screenType: windowService.getScreenType()
 	};
 		
 	$scope.init = function() {
 		locals.restApi = momService.getRestApi();
 		
+        $scope.screenType = locals.screenType;
+        
 		$scope.selectedMOM = null;
 		$scope.dateFormat = 'MM/DD/YYYY';
 		$scope.list = locals.restApi.getAll({}, function(data) {
@@ -200,13 +234,20 @@ MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $time
 			$scope.list = $filter('orderBy')($scope.list, 'createdOn', true);
 			
 			if($scope.list.length > 0) {
-				$scope.view($scope.list[0]);
+                if(locals.screenType == 'md' || locals.screenType == 'lg') {
+				    $scope.view($scope.list[0]);
+                }
+                //$scope.selectedMOM = $scope.list[0];
 			}
 		});
 	};
 	
 	$scope.view = function(mom) {
-		$scope.selectedMOM = mom;
+        if(locals.screenType == 'md' || locals.screenType == 'lg') {
+            $scope.selectedMOM = mom;
+        } else {
+            $location.path('/mom/view/'+mom._id);  
+        }
 	};
 	
 	$scope.prepareMomForView = function(mom) {		
@@ -252,6 +293,44 @@ MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $time
     };
     
 	$scope.init();
+});
+
+MOMApp.controller('MOMViewCtrl', function($scope, $log, $routeParams, momService) {	
+    var locals = {
+        restApi: momService.getRestApi()
+    };
+    
+    $scope.init = function() {
+        var momId = $routeParams.momId;
+        $scope.selectedMOM = locals.restApi.getById({id: momId}, function(data) {
+            $scope.selectedMOM.createdOn = moment($scope.selectedMOM.createdOn);
+            $scope.prepareMomForView($scope.selectedMOM);
+		});
+    };
+    
+    $scope.prepareMomForView = function(mom) {		
+		var mailtoURL = '';
+		for(var i = 0;i < mom.attendees.length;i++) {
+			if(mailtoURL != '') {
+				mailtoURL += ';';
+			}
+			if(!angular.equals(mom.attendees[i].email, '')) {
+				mailtoURL += mom.attendees[i].email;
+			}
+		}
+		mailtoURL += '&subject='+mom.project.name+': '+mom.title+' ['+mom.createdOn.format('MM/DD/YYYY')+']&body=<copy and paste contents from the Web Page in here>';
+		mom.mailtoURL = mailtoURL;
+		
+		//Update Owner Reference for each of the items.
+		for(var i = 0;i < mom.items.length;i++) {
+			//$log.debug($scope.selectedMOM.items[i].dueDate);
+			if(!angular.equals(moment(mom.items[i].dueDate).format(), 'Invalid date')) {
+				mom.items[i].dueDate = moment(mom.items[i].dueDate);
+			}
+		}
+	};
+    
+    $scope.init();
 });
 
 /**
