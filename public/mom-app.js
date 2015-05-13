@@ -334,9 +334,7 @@ MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $time
 	
 	$scope.copy = function() {
 		var momContent = angular.element(document.getElementById('mom-content'));
-		//$scope.bang = momContent.html();
 		return momContent.html();
-		//$log.debug(momContent.text());
 	};
     
     $scope.flashUnavailable = function() {
@@ -404,7 +402,8 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 	var locals = {
 		restApi: null,
 		projectsRestApi: null,
-		membersRestApi: null
+		membersRestApi: null,
+        action: 'create'
 	};
     
 	$scope.init = function() {
@@ -413,29 +412,16 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 		locals.membersRestApi = teamMembersService.getRestApi();
 		
 		$scope.datepickerFormat = 'MM/dd/yyyy';
-		
+		$scope.currentUser = userService.getUserCookie();
+        
 		$scope.teamMembers = locals.membersRestApi.getAll();
 		$scope.projects = locals.projectsRestApi.getAll();
 		$scope.mom = null;
-		var action = $routeParams.action;
-		if(action == 'create') {
-			$scope.mom = momService.getNewMOM();
-		} else {
-			var momId = $routeParams.momId;
-            if(momService.getActiveMom() == null) {
-			  $scope.mom = locals.restApi.getById({id: momId}, function(data) {
-				$scope.prepareMomForEdit();
-			  });
-            } else {
-              $scope.mom = momService.getActiveMom();  
-            }
-		}
-		
-		$scope.currentUser = userService.getUserCookie();
-		
+		locals.action = $routeParams.action;
+				
 		$scope.form = {
-			action: action,
-			title: (action == 'create') ? 'Create Minutes' : 'Edit Minutes',			
+			action: locals.action,
+			title: (locals.action == 'create') ? 'Create Minutes' : 'Edit Minutes',			
 			minutesTaker: '', //Name of the person. String.
 			attendeeName: '',
 			attendees: [],
@@ -537,11 +523,26 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 				$scope.mom.items = items;
 			}
 		};
+        
+        if(locals.action == 'create') {
+			$scope.mom = momService.getNewMOM();
+		} else {
+			var momId = $routeParams.momId;
+            if(momService.getActiveMom() == null) {
+			    $scope.mom = locals.restApi.getById({id: momId}, function(data) {
+				    $scope.prepareMomForEdit();
+			    });
+            } else {
+                $scope.mom = momService.getActiveMom(); 
+                $scope.prepareMomForEdit();
+            }
+		}
 	};
 	
 	$scope.prepareMomForEdit = function() {
+        //$log.debug($scope.mom);
 		$scope.mom.createdOn = moment($scope.mom.createdOn);
-		$scope.form.title = $scope.mom.title+' - '+$scope.mom.createdOn.format('MM/DD/YYYY')+' ('+$scope.form.action+')';
+		$scope.form.title = $scope.mom.title+' - '+$scope.mom.createdOn.format('MM/DD/YYYY')+' ('+locals.action+')';
 		$scope.form.minutesTaker = $scope.mom.minutesTaker.name; 
 		
 		$scope.form.attendees = [];
@@ -602,14 +603,14 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 			locals.restApi.save({}, $scope.mom, function(res) {
 				$scope.form.action = 'edit';
 				$scope.mom._id = res._id;
-				$scope.form.title = $scope.mom.title+' - '+$scope.mom.createdOn.format('MM/DD/YYYY')+' ('+$scope.form.action+')';
+				$scope.form.title = $scope.mom.title+' - '+$scope.mom.createdOn.format('MM/DD/YYYY')+' ('+locals.action+')';
 				$scope.form.successMessage = 'Successfully created MOM.';
 			}, function(err) {
 				$scope.form.errorMessage = 'Error saving Data! ' + err.statusText;
 			});
 		} else {
 			locals.restApi.update({id: $scope.mom._id}, $scope.mom, function(res) {
-				$scope.form.title = $scope.mom.title+' - '+$scope.mom.createdOn.format('MM/DD/YYYY')+' ('+$scope.form.action+')';
+				$scope.form.title = $scope.mom.title+' - '+$scope.mom.createdOn.format('MM/DD/YYYY')+' ('+locals.action+')';
 				$scope.form.successMessage = 'Successfully updated MOM.';
 			}, function(err) {
 				$scope.form.errorMessage = 'Error saving Data! ' + err.statusText;
