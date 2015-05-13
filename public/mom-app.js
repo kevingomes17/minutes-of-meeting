@@ -11,7 +11,7 @@ MOMApp.config(['$routeProvider',
         templateUrl: 'templates/projects.html',
         controller: 'ProjectsCtrl'
       }).
-      when('/projects/edit/:projectId', {
+      when('/projects/:action/:projectId', {
         templateUrl: 'templates/project-edit.html',
         controller: 'ProjectsCtrl'
       }).
@@ -94,7 +94,7 @@ MOMApp.factory('momService', function($http, $q, $log, $timeout, $resource, $cac
 //                locals.cache.remove(response.config.url);
 //                $log.debug('cache removed', response.config.url);
                 locals.cache.remove(url);
-                return response;
+                return response.data;
             }
         },
         activeMom: null
@@ -152,7 +152,7 @@ MOMApp.factory('projectsService', function($http, $q, $log, $resource, $cacheFac
             response: function (response) {
                 locals.cache.remove(url);
 //                $log.debug('remove cache', url, locals.cache.info());
-                return response;
+                return response.data;
             }
         },
         activeProject: null
@@ -624,6 +624,7 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 				
 		if($scope.mom._id == null) {				
 			locals.restApi.save({}, $scope.mom, function(res) {
+                $log.debug(res);
 				$scope.form.action = 'edit';
 				$scope.mom._id = res._id;
 				$scope.form.title = $scope.mom.title+' - '+$scope.mom.createdOn.format('MM/DD/YYYY')+' ('+locals.action+')';
@@ -676,17 +677,29 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $rou
                 $scope.form.errorMessage = '';
                 $scope.form.successMessage = '';
                 
-                var projectId = $routeParams.projectId;
-                if(projectsService.getActiveProject() == null) {
-                    var project = locals.restApi.getById({id: projectId}, function(data) {
-                        $scope.form.title = 'Update Project: '+project.name;
-                        $scope.form.project = project;
-                        $scope.prepareProjectForEdit($scope.form.project);
-                    });
-                } else {
-                    $scope.form.project = projectsService.getActiveProject();
-                    $scope.form.title = 'Update Project: '+$scope.form.project.name;                    
-                    $scope.prepareProjectForEdit($scope.form.project);
+                if(typeof $routeParams.action != 'undefined') {
+                    if($routeParams.action == 'add') {
+                        $scope.form.project = projectsService.getNewProject();
+                        $scope.form.title = 'Add Project';
+                        var selectedMembers = $filter('filter')($scope.team, {isChecked: true});
+                        for(var i = 0;i < selectedMembers.length;i++) {
+                            selectedMembers[i].isChecked = false;
+                        }
+                        $scope.form.errorMessage = '';
+                    } else { //Project EDIT mode
+                        var projectId = $routeParams.projectId;
+                        if(projectsService.getActiveProject() == null) {                            
+                            var project = locals.restApi.getById({id: projectId}, function(data) {
+                                $scope.form.title = 'Update Project: '+project.name;
+                                $scope.form.project = project;
+                                $scope.prepareProjectForEdit($scope.form.project);
+                            });
+                        } else {
+                            $scope.form.project = projectsService.getActiveProject();
+                            $scope.form.title = 'Update Project: '+$scope.form.project.name;                    
+                            $scope.prepareProjectForEdit($scope.form.project);
+                        }
+                    }
                 }
             }
         });
@@ -714,27 +727,29 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $rou
 			selectedMembers[i].isChecked = false;
 		}
 		
-//        $log.debug(project.teamMembers);
 		for(var i = 0;i < project.teamMembers.length;i++) {
 			for(var j = 0;j < $scope.team.length;j++) {
-				if((typeof project.teamMembers[i] == 'string' && $scope.team[j]._id == project.teamMembers[i])
-					|| (typeof project.teamMembers[i] == 'object' && $scope.team[j]._id == project.teamMembers[i]._id)) {
+				if($scope.team[j]._id == project.teamMembers[i]._id) {
 					$scope.team[j].isChecked = true;
 					break;
 				}
 			}
 		}
-        
-//        $log.debug($scope.team);
 	};
 	
 	$scope.deleteProject = function() {
 		locals.restApi.delete({id: $scope.form.project._id}, function(res) {
-			$scope.resetForm();
-			$scope.projects = locals.restApi.getAll();
-			$scope.form.successMessage = '';
-			$scope.form.errorMessage = '';
-		}, function(err) {});
+            if(locals.screenType == 'xs' || locals.screenType == 'sm') {
+                $location.path('/projects');
+            } else {
+                $scope.resetForm();
+                $scope.projects = locals.restApi.getAll();
+                $scope.form.successMessage = '';
+                $scope.form.errorMessage = '';
+            }
+		}, function(err) {
+            $scope.form.errorMessage = 'Error deleting Project! Please try again.';
+        });
 	};
 	
 	$scope.saveProject = function() {
@@ -754,11 +769,14 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $rou
 				$scope.form.project.teamMembers = selectedMembers;
 				
 				locals.restApi.save({}, $scope.form.project, function(res) {
-					$scope.form.successMessage = 'Successfully created Project.';
-					$scope.projects.push(res);// = locals.restApi.getAll();
+                    $log.debug(res);
+					$scope.form.successMessage = 'Successfully created Project.';                    
 					$scope.form.project = res;
 					$scope.form.title = 'Update Project';
-					$scope.prepareProjectForEdit($scope.form.project);					
+					$scope.prepareProjectForEdit($scope.form.project);
+                    if(locals.screenType == 'md' || locals.screenType == 'lg') {
+                        $scope.projects.push(res);
+                    }
 				}, function(err) {
 					$scope.form.errorMessage = 'Error saving Data! ' + err;
 				});
@@ -769,13 +787,17 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $rou
 	};
 	
 	$scope.resetForm = function() {
-		$scope.form.project = projectsService.getNewProject();
-		$scope.form.title = 'Add Project';
-		var selectedMembers = $filter('filter')($scope.team, {isChecked: true});
-		for(var i = 0;i < selectedMembers.length;i++) {
-			selectedMembers[i].isChecked = false;
-		}
-		$scope.form.errorMessage = '';
+        if(locals.screenType == 'md' || locals.screenType == 'lg') {
+            $scope.form.project = projectsService.getNewProject();
+            $scope.form.title = 'Add Project';
+            var selectedMembers = $filter('filter')($scope.team, {isChecked: true});
+            for(var i = 0;i < selectedMembers.length;i++) {
+                selectedMembers[i].isChecked = false;
+            }
+            $scope.form.errorMessage = '';
+        } else {
+            $location.path('/projects/add/0');   
+        }
 	};
 	
 	$scope.init();
