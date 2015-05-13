@@ -669,7 +669,7 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $rou
 			title: 'Add Project',
 			errorMessage: '',
 			successMessage: '',
-			project: (projectsService.getActiveProject() == null) ? projectsService.getNewProject() : projectsService.getActiveProject()
+			project: projectsService.getNewProject()
 		};
         
         $scope.team = locals.membersRestApi.getAll(null, function(data) {
@@ -701,6 +701,10 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $rou
                         }
                     }
                 }
+            } else {
+                if(projectsService.getActiveProject() != null) {
+                    $scope.edit(projectsService.getActiveProject());
+                }
             }
         });
         if(typeof $routeParams.projectId == 'undefined') { //The project is not in edit mode.
@@ -712,17 +716,18 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $rou
         $scope.form.project = project;
         projectsService.setActiveProject(project);
         
-        if(locals.screenType == 'md' || locals.screenType == 'lg') {
+        if(locals.screenType == 'md' || locals.screenType == 'lg') {            
             $scope.form.errorMessage = '';
 		    $scope.form.successMessage = '';
 		    $scope.form.title = 'Update Project';
+            $scope.prepareProjectForEdit($scope.form.project);
         } else {
             $location.path('/projects/edit/'+project._id);
         }
 	};
 	
 	$scope.prepareProjectForEdit = function(project) {
-		var selectedMembers = $filter('filter')($scope.team, {isChecked: true});
+        var selectedMembers = $filter('filter')($scope.team, {isChecked: true});
 		for(var i = 0;i < selectedMembers.length;i++) {
 			selectedMembers[i].isChecked = false;
 		}
