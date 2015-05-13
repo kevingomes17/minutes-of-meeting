@@ -143,15 +143,27 @@ MOMApp.factory('momService', function($http, $q, $log, $timeout, $resource, $cac
  * "projectsService" that exposes the Project API as an ngResource.
  * This is also used to share data between different Project Controllers.
  */
-MOMApp.factory('projectsService', function($http, $q, $log, $resource) {	
+MOMApp.factory('projectsService', function($http, $q, $log, $resource, $cacheFactory) {	
 	var url = '/api/projects';
-	var restApi = $resource(url, {
-		callback: 'JSON_CALLBACK'
-	}, {
-		'getAll': {method: 'JSONP', isArray: true, cache: true},
-        'getById': {method: 'GET', url: '/api/projects/:id', cache: true},
-		'delete': {method: 'DELETE', url: '/api/projects/:id'},
-		'update': {method: 'PUT', url: '/api/projects/:id'}
+    
+    var locals = {
+        cache: $cacheFactory('projectsServiceCache'),
+        interceptor: {
+            response: function (response) {
+                locals.cache.remove(url);
+//                $log.debug('remove cache', url, locals.cache.info());
+                return response;
+            }
+        },
+        activeProject: null
+    };
+    
+	var restApi = $resource(url, {}, {
+		'getAll': {method: 'GET', isArray: true, cache: locals.cache},
+        'getById': {method: 'GET', url: '/api/projects/:id', cache: locals.cache},
+		'delete': {method: 'DELETE', url: '/api/projects/:id', interceptor: locals.interceptor},
+		'update': {method: 'PUT', url: '/api/projects/:id', interceptor: locals.interceptor},
+        'save': {method: 'POST', url: '/api/projects', interceptor: locals.interceptor}
 	});
 	
 	var factory = {};
@@ -170,6 +182,14 @@ MOMApp.factory('projectsService', function($http, $q, $log, $resource) {
 		};
 		return project;
 	};
+    
+    factory.setActiveProject = function(project) {
+        locals.activeProject = project;
+    };
+    
+    factory.getActiveProject = function() {
+        return locals.activeProject;
+    };
 	
 	return factory;
 }); 
@@ -347,7 +367,7 @@ MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $time
 
 /**
  * View a MOM Controller.
- * @params
+ * @routeParams
  * momId - ID of the MOM that is to be viewed.
  */
 MOMApp.controller('MOMViewCtrl', function($scope, $log, $routeParams, momService) {	
@@ -396,7 +416,10 @@ MOMApp.controller('MOMViewCtrl', function($scope, $log, $routeParams, momService
 });
 
 /**
- * Modal Form Controller.
+ * MOM Form Controller.
+ * @routeParams
+ * momId - ID of the MOM that is to be viewed.
+ * action - create/edit
  */
 MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $location, momService, projectsService, teamMembersService, userService) {
 	var locals = {
@@ -621,52 +644,67 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 	$scope.init();
 });
 
+/**
+ * Projects landing page controller.
+ * Functions:
+ * - Displays list of projects
+ * - Add/Edit Project
+ * - Edit Project using the proejct-edit.html template when on small screen devices.
+ */
 MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $routeParams, $location, projectsService, teamMembersService, userService, windowService) {
 	var locals = {
 		restApi: null,
 		membersRestApi: null,
         screenType: windowService.getScreenType()
 	};
+    
 	$scope.init = function() {
         $scope.screenType = locals.screenType;
 		locals.restApi = projectsService.getRestApi();
 		locals.membersRestApi = teamMembersService.getRestApi();
-		
+		$scope.currentUser = userService.getUserCookie();
+        
+        $scope.form = {
+			title: 'Add Project',
+			errorMessage: '',
+			successMessage: '',
+			project: (projectsService.getActiveProject() == null) ? projectsService.getNewProject() : projectsService.getActiveProject()
+		};
+        
         $scope.team = locals.membersRestApi.getAll(null, function(data) {
-            if(typeof $routeParams.projectId != 'undefined') {
-                var projectId = $routeParams.projectId;   
-          var project = locals.restApi.getById({id: projectId}, function(data) {
-              $scope.form.errorMessage = '';
-		      $scope.form.successMessage = '';
-		      $scope.form.title = 'Update Project: '+project.name;
-              $scope.form.project = project;
-		      $scope.prepareProjectForEdit($scope.form.project);
-          });
+            if(typeof $routeParams.projectId != 'undefined') { //if Controller was invoked with project-edit.html template
+                $scope.form.errorMessage = '';
+                $scope.form.successMessage = '';
+                
+                var projectId = $routeParams.projectId;
+                if(projectsService.getActiveProject() == null) {
+                    var project = locals.restApi.getById({id: projectId}, function(data) {
+                        $scope.form.title = 'Update Project: '+project.name;
+                        $scope.form.project = project;
+                        $scope.prepareProjectForEdit($scope.form.project);
+                    });
+                } else {
+                    $scope.form.project = projectsService.getActiveProject();
+                    $scope.form.title = 'Update Project: '+$scope.form.project.name;                    
+                    $scope.prepareProjectForEdit($scope.form.project);
+                }
             }
         });
         if(typeof $routeParams.projectId == 'undefined') { //The project is not in edit mode.
 		  $scope.projects = locals.restApi.getAll();
         }
-		
-		$scope.form = {
-			title: 'Add Project',
-			errorMessage: '',
-			successMessage: '',
-			project: projectsService.getNewProject()
-		};
-		
-		$scope.currentUser = userService.getUserCookie();
 	};
 	
 	$scope.edit = function(project) {
+        $scope.form.project = project;
+        projectsService.setActiveProject(project);
+        
         if(locals.screenType == 'md' || locals.screenType == 'lg') {
-		  $scope.form.errorMessage = '';
-		  $scope.form.successMessage = '';
-		  $scope.form.title = 'Update Project';
-		  $scope.form.project = project;
-		  $scope.prepareProjectForEdit($scope.form.project);
+            $scope.form.errorMessage = '';
+		    $scope.form.successMessage = '';
+		    $scope.form.title = 'Update Project';
         } else {
-          $location.path('/projects/edit/'+project._id);
+            $location.path('/projects/edit/'+project._id);
         }
 	};
 	

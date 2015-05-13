@@ -8,7 +8,7 @@ var Project = require('../models/Project.js');
 router.get('/', function(req, res, next) {
   Project.find(function (err, items) {
     if (err) return next(err);
-    res.jsonp(items);
+    res.json(items);
   }).populate('teamMembers');
 });
 
