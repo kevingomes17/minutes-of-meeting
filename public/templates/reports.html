@@ -4,7 +4,18 @@
 			<h3>Reports <span class="label label-default" style="cursor: pointer;" ng-click="gotoPath('/dashboard')">Back to Dashboard</span></h3><hr/>
 			<div class="row">
 			
-				<div class="col-xs-3">
+                <div ng-if="screenType == 'xs' || screenType == 'sm'" class="col-xs-12">
+					<div ng-if="list.length > 0">
+						<input type="text" class="form-control" placeholder="Search people, project, meeting title.." ng-model="searchmom"/> <br/>
+						<ul style="padding-left: 0;">
+							<li class="list-group-item" ng-repeat="mom in list | filter:searchmom | orderBy : 'createdOn' : true ">
+								<input type="checkbox" ng-model="mom.isChecked" ng-click="momClicked()"> <span>{{mom.title}} [{{mom.createdOn.format(dateFormat)}}], <strong>Project:</strong> {{mom.project.name}}</span>						
+							</li>
+						</ul>
+					</div>
+				</div> 
+                
+				<div ng-if="screenType == 'md' || screenType == 'lg'" class="col-xs-3">
 					<div ng-if="list.length > 0">
 						<input type="text" class="form-control" placeholder="Search people, project, meeting title.." ng-model="searchmom"/> <br/>
 						<ul style="padding-left: 0;">
@@ -15,7 +26,7 @@
 					</div>
 				</div> 
 				
-				<div class="col-xs-9">
+				<div ng-if="screenType == 'md' || screenType == 'lg'" class="col-xs-9">
 					<div class="alert alert-warning" ng-if="selectedMoms.length == 0">Select the MOM whose items need be added to the Report</div>
 					
 					<div id="mom-content" ng-if="selectedMoms.length > 0">

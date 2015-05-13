@@ -1,0 +1,36 @@
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-xs-12">
+			<h3>{{form.title}}</h3><hr/>
+			
+			<div class="row">               
+				<div class="col-xs-12">
+					
+					<div class="row">
+						<div class="col-xs-3">
+							<input type="text" class="form-control" placeholder="Name"  ng-model="form.project.name" />
+						</div>
+						<div class="col-xs-5">
+							<input type="text" class="form-control" placeholder="Description"  ng-model="form.project.description" />
+						</div>						
+					</div>
+					
+					<br/>
+					<fieldset class="team-members-wrapper">
+						<strong>Members</strong>
+						<ul>
+							<li style="list-style: none;" ng-repeat="member in team | orderBy : 'name'"><input type="checkbox" ng-model="member.isChecked"/>{{member.name}}({{member.email}})</li>
+						</ul>						
+					</fieldset>
+					
+					<div style="text-align: right; padding-top: 5px; border-top: 1px solid #eee;">
+						<span class="label label-danger">{{form.errorMessage}}</span>
+						<span class="label label-success">{{form.successMessage}}</span>
+						<button class="btn btn-danger" ng-if="form.project._id != null && currentUser.isAdmin == true" ng-click="deleteProject()">Delete</button>
+						<button class="btn btn-primary" ng-click="saveProject()">Save</button>					
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

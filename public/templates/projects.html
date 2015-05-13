@@ -4,7 +4,7 @@
 			<h3>Projects <span class="label label-default" style="cursor: pointer;" ng-click="resetForm()">Add Project</span></h3><hr/>
 			
 			<div class="row">
-				<div class="col-xs-3">
+                <div ng-if="screenType == 'xs' || screenType == 'sm'"  class="col-xs-12">
 					<div ng-if="projects.length == 0">-No Projects available-</div>
 					<ul ng-if="projects.length > 0" class="list-group">
 						<li class="list-group-item" ng-repeat="project in projects | orderBy : 'name'" ng-click="edit(project)" style="cursor: pointer;" ng-class="{'active': (project._id == form.project._id)}">
@@ -13,7 +13,16 @@
 						</li>
 					</ul>
 				</div>
-				<div class="col-xs-9">
+				<div ng-if="screenType == 'md' || screenType == 'lg'"  class="col-xs-3">
+					<div ng-if="projects.length == 0">-No Projects available-</div>
+					<ul ng-if="projects.length > 0" class="list-group">
+						<li class="list-group-item" ng-repeat="project in projects | orderBy : 'name'" ng-click="edit(project)" style="cursor: pointer;" ng-class="{'active': (project._id == form.project._id)}">
+							<h4 class="list-group-item-heading">{{project.name}}</h4>
+							<p class="list-group-item-text">{{project.description}}</p>		
+						</li>
+					</ul>
+				</div>
+				<div ng-if="screenType == 'md' || screenType == 'lg'"  class="col-xs-9">
 					<h4>{{form.title}}</h4> 
 					<div class="row">
 						<div class="col-xs-3">

@@ -8,9 +8,12 @@
 				<input type="text" class="form-control" placeholder="Search people, project, meeting title.." ng-model="searchmom"/> <br/>
 				<ul style="padding-left: 0;">
 					<li class="list-group-item" ng-repeat="mom in list | filter:searchmom | orderBy : 'createdOn' : true " ng-class="{'active': (selectedMOM._id == mom._id)}">
-						<span style="cursor: pointer;" ng-click="view(mom)">{{mom.title}} [{{mom.createdOn.format(dateFormat)}}], <strong>Project:</strong> {{mom.project.name}}</span>
+						<span style="cursor: pointer; display: inline-block; width: 90%;" ng-click="view(mom)">
+                            {{mom.title}} [{{mom.createdOn.format(dateFormat)}}] 
+                            <span style="display: block;"><strong>Project:</strong> {{mom.project.name}}</span> 
+                        </span>
 						<span class="actions" style="float: right;">
-							<a href="#/mom/edit/{{mom._id}}"><span class="glyphicon glyphicon-pencil"></span></a>
+							<span ng-click="edit(mom)" style="cursor: pointer;"><span class="glyphicon glyphicon-pencil"></span></span>
 						</span>
 					</li>
 				</ul>
@@ -24,9 +27,12 @@
 				<input type="text" class="form-control" placeholder="Search people, project, meeting title.." ng-model="searchmom"/> <br/>
 				<ul style="padding-left: 0;">
 					<li class="list-group-item" ng-repeat="mom in list | filter:searchmom | orderBy : 'createdOn' : true " ng-class="{'active': (selectedMOM._id == mom._id)}">
-						<span style="cursor: pointer;" ng-click="view(mom)">{{mom.title}} [{{mom.createdOn.format(dateFormat)}}], <strong>Project:</strong> {{mom.project.name}}</span>
+						<span style="cursor: pointer; display: inline-block; width: 90%;" ng-click="view(mom)">
+                            {{mom.title}} [{{mom.createdOn.format(dateFormat)}}] 
+                            <span style="display: block;"><strong>Project:</strong> {{mom.project.name}}</span> 
+                        </span>
 						<span class="actions" style="float: right;">
-							<a href="#/mom/edit/{{mom._id}}"><span class="glyphicon glyphicon-pencil"></span></a>
+							<span ng-click="edit(mom)" style="cursor: pointer;"><span class="glyphicon glyphicon-pencil"></span></span>
 						</span>
 					</li>
 				</ul>

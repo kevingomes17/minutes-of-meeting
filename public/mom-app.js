@@ -11,6 +11,10 @@ MOMApp.config(['$routeProvider',
         templateUrl: 'templates/projects.html',
         controller: 'ProjectsCtrl'
       }).
+      when('/projects/edit/:projectId', {
+        templateUrl: 'templates/project-edit.html',
+        controller: 'ProjectsCtrl'
+      }).
 	  when('/team-members', {
         templateUrl: 'templates/team-members.html',
         controller: 'TeamMembersCtrl'
@@ -19,6 +23,10 @@ MOMApp.config(['$routeProvider',
         templateUrl: 'templates/reports.html',
         controller: 'ReportsCtrl'
       }).
+      /*when('/reports/view', {
+        templateUrl: 'templates/reports-view.html',
+        controller: 'ReportsViewCtrl'
+      }).*/
       when('/mom/view/:momId', {
         templateUrl: 'templates/mom-view.html',
         controller: 'MOMViewCtrl'
@@ -40,6 +48,10 @@ MOMApp.config(['ngClipProvider', function(ngClipProvider) {
     ngClipProvider.setPath("bower_components/zeroclipboard/dist/ZeroClipboard.swf");
   }]);
 
+/**
+ * "userService" that exposes the User API as an ngResource.
+ * This is also used to share data between different User Controllers.
+ */
 MOMApp.factory('userService', function($http, $q, $log, $timeout, $resource, $cookies) {
 	var url = '/api/user';
 	var restApi = $resource(url, {
@@ -66,24 +78,41 @@ MOMApp.factory('userService', function($http, $q, $log, $timeout, $resource, $co
 	
 	return factory;
 });
-  
-MOMApp.factory('momService', function($http, $q, $log, $timeout, $resource) {
-	var url = '/api/mom';
-	var restApi = $resource(url, {
-		callback: 'JSON_CALLBACK'
-	}, {
-		'getAll': {method: 'JSONP', isArray: true, cache: true},
-		'getById': {method: 'JSONP', url: '/api/mom/:id', cache: true},
-		'delete': {method: 'DELETE', url: '/api/mom/:id'},
-		'update': {method: 'PUT', url: '/api/mom/:id'}
+
+/**
+ * "momService" that exposes the MOM API as an ngResource.
+ * This is also used to share data between different MOM Controllers.
+ */
+MOMApp.factory('momService', function($http, $q, $log, $timeout, $resource, $cacheFactory) {
+    var factory = {};
+    var url = '/api/mom';
+    
+    var locals = {
+        cache: $cacheFactory('momServiceCache'),
+        interceptor: {
+            response: function (response) {
+//                locals.cache.remove(response.config.url);
+//                $log.debug('cache removed', response.config.url);
+                locals.cache.remove(url);
+                return response;
+            }
+        },
+        activeMom: null
+    };
+    
+    //callback: 'JSON_CALLBACK'
+	var restApi = $resource(url, {}, {
+        'query': {method: 'GET', url: '/api/mom', isArray:true, cache: locals.cache},
+		'getById': {method: 'GET', url: '/api/mom/:id', cache: locals.cache},
+		'delete': {method: 'DELETE', url: '/api/mom/:id', interceptor: locals.interceptor},
+		'update': {method: 'PUT', url: '/api/mom/:id', interceptor: locals.interceptor},
+        'save': {method: 'POST', url: '/api/mom', interceptor: locals.interceptor}
 	});
-	
-	var factory = {};
 	
 	factory.getRestApi = function() {
 		return restApi;
 	};
-	
+    
 	factory.getNewMOM = function() {
 		var mom = {
 			project: '',
@@ -98,16 +127,29 @@ MOMApp.factory('momService', function($http, $q, $log, $timeout, $resource) {
 		};
 		return mom;
 	};
-		
+    
+    factory.setActiveMom = function(mom) {
+        locals.activeMom = mom;
+    };
+    
+    factory.getActiveMom = function() {
+        return locals.activeMom;
+    };
+    
 	return factory;
 }); 
 
+/**
+ * "projectsService" that exposes the Project API as an ngResource.
+ * This is also used to share data between different Project Controllers.
+ */
 MOMApp.factory('projectsService', function($http, $q, $log, $resource) {	
 	var url = '/api/projects';
 	var restApi = $resource(url, {
 		callback: 'JSON_CALLBACK'
 	}, {
 		'getAll': {method: 'JSONP', isArray: true, cache: true},
+        'getById': {method: 'GET', url: '/api/projects/:id', cache: true},
 		'delete': {method: 'DELETE', url: '/api/projects/:id'},
 		'update': {method: 'PUT', url: '/api/projects/:id'}
 	});
@@ -212,6 +254,9 @@ MOMApp.controller('HeaderCtrl', function($scope, $modal, $log, $filter, $cookies
 	};
 });
 
+/**
+ * Application Dashboard Controller.
+ */
 MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $timeout, $cookies, $location, momService, windowService) {	
 	var locals = {
 		restApi: null,
@@ -219,36 +264,43 @@ MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $time
 	};
 		
 	$scope.init = function() {
-		locals.restApi = momService.getRestApi();
-		
-        $scope.screenType = locals.screenType;
-        
-		$scope.selectedMOM = null;
+		locals.restApi = momService.getRestApi();		
+        $scope.screenType = locals.screenType;        
+        $scope.selectedMOM = momService.getActiveMom(); //Valid MOM object or NULL.
 		$scope.dateFormat = 'MM/DD/YYYY';
-		$scope.list = locals.restApi.getAll({}, function(data) {
-			for(var i = 0;i < $scope.list.length;i++) {
+                
+        $scope.list = locals.restApi.query({}, function(data) {
+            for(var i = 0;i < $scope.list.length;i++) {
 				$scope.list[i].createdOn = moment($scope.list[i].createdOn);
 				$scope.prepareMomForView($scope.list[i]);
 			}
 			
 			$scope.list = $filter('orderBy')($scope.list, 'createdOn', true);
-			
+            
 			if($scope.list.length > 0) {
                 if(locals.screenType == 'md' || locals.screenType == 'lg') {
 				    $scope.view($scope.list[0]);
                 }
-                //$scope.selectedMOM = $scope.list[0];
 			}
-		});
+        });        
 	};
 	
 	$scope.view = function(mom) {
         if(locals.screenType == 'md' || locals.screenType == 'lg') {
             $scope.selectedMOM = mom;
+            momService.setActiveMom(mom);
         } else {
+            $scope.selectedMOM = mom;
+            momService.setActiveMom(mom);
             $location.path('/mom/view/'+mom._id);  
         }
 	};
+    
+    $scope.edit = function(mom) {
+        $scope.selectedMOM = mom;
+        momService.setActiveMom(mom);
+        $location.path('/mom/edit/'+mom._id);  
+    };
 	
 	$scope.prepareMomForView = function(mom) {		
 		var mailtoURL = '';
@@ -295,6 +347,11 @@ MOMApp.controller('DashboardCtrl', function($scope, $modal, $log, $filter, $time
 	$scope.init();
 });
 
+/**
+ * View a MOM Controller.
+ * @params
+ * momId - ID of the MOM that is to be viewed.
+ */
 MOMApp.controller('MOMViewCtrl', function($scope, $log, $routeParams, momService) {	
     var locals = {
         restApi: momService.getRestApi()
@@ -302,10 +359,17 @@ MOMApp.controller('MOMViewCtrl', function($scope, $log, $routeParams, momService
     
     $scope.init = function() {
         var momId = $routeParams.momId;
-        $scope.selectedMOM = locals.restApi.getById({id: momId}, function(data) {
+        
+        $scope.selectedMOM = momService.getActiveMom();
+        if($scope.selectedMOM == null) {
+          $scope.selectedMOM = locals.restApi.getById({id: momId}, function(data) {
             $scope.selectedMOM.createdOn = moment($scope.selectedMOM.createdOn);
+              momService.setActiveMom($scope.selectedMOM);
             $scope.prepareMomForView($scope.selectedMOM);
-		});
+		  });
+        } else {
+          $scope.prepareMomForView($scope.selectedMOM);
+        }
     };
     
     $scope.prepareMomForView = function(mom) {		
@@ -342,6 +406,7 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 		projectsRestApi: null,
 		membersRestApi: null
 	};
+    
 	$scope.init = function() {
 		locals.restApi = momService.getRestApi();
 		locals.projectsRestApi = projectsService.getRestApi();
@@ -357,9 +422,13 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 			$scope.mom = momService.getNewMOM();
 		} else {
 			var momId = $routeParams.momId;
-			$scope.mom = locals.restApi.getById({id: momId}, function(data) {
+            if(momService.getActiveMom() == null) {
+			  $scope.mom = locals.restApi.getById({id: momId}, function(data) {
 				$scope.prepareMomForEdit();
-			});
+			  });
+            } else {
+              $scope.mom = momService.getActiveMom();  
+            }
 		}
 		
 		$scope.currentUser = userService.getUserCookie();
@@ -551,17 +620,32 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 	$scope.init();
 });
 
-MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, projectsService, teamMembersService, userService) {
+MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $routeParams, $location, projectsService, teamMembersService, userService, windowService) {
 	var locals = {
 		restApi: null,
-		membersRestApi: null
+		membersRestApi: null,
+        screenType: windowService.getScreenType()
 	};
 	$scope.init = function() {
+        $scope.screenType = locals.screenType;
 		locals.restApi = projectsService.getRestApi();
 		locals.membersRestApi = teamMembersService.getRestApi();
 		
-		$scope.projects = locals.restApi.getAll();
-		$scope.team = locals.membersRestApi.getAll();
+        $scope.team = locals.membersRestApi.getAll(null, function(data) {
+            if(typeof $routeParams.projectId != 'undefined') {
+                var projectId = $routeParams.projectId;   
+          var project = locals.restApi.getById({id: projectId}, function(data) {
+              $scope.form.errorMessage = '';
+		      $scope.form.successMessage = '';
+		      $scope.form.title = 'Update Project: '+project.name;
+              $scope.form.project = project;
+		      $scope.prepareProjectForEdit($scope.form.project);
+          });
+            }
+        });
+        if(typeof $routeParams.projectId == 'undefined') { //The project is not in edit mode.
+		  $scope.projects = locals.restApi.getAll();
+        }
 		
 		$scope.form = {
 			title: 'Add Project',
@@ -574,11 +658,15 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, proj
 	};
 	
 	$scope.edit = function(project) {
-		$scope.form.errorMessage = '';
-		$scope.form.successMessage = '';
-		$scope.form.title = 'Update Project';
-		$scope.form.project = project;
-		$scope.prepareProjectForEdit($scope.form.project);
+        if(locals.screenType == 'md' || locals.screenType == 'lg') {
+		  $scope.form.errorMessage = '';
+		  $scope.form.successMessage = '';
+		  $scope.form.title = 'Update Project';
+		  $scope.form.project = project;
+		  $scope.prepareProjectForEdit($scope.form.project);
+        } else {
+          $location.path('/projects/edit/'+project._id);
+        }
 	};
 	
 	$scope.prepareProjectForEdit = function(project) {
@@ -587,6 +675,7 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, proj
 			selectedMembers[i].isChecked = false;
 		}
 		
+//        $log.debug(project.teamMembers);
 		for(var i = 0;i < project.teamMembers.length;i++) {
 			for(var j = 0;j < $scope.team.length;j++) {
 				if((typeof project.teamMembers[i] == 'string' && $scope.team[j]._id == project.teamMembers[i])
@@ -596,6 +685,8 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, proj
 				}
 			}
 		}
+        
+//        $log.debug($scope.team);
 	};
 	
 	$scope.deleteProject = function() {
@@ -651,12 +742,14 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, proj
 	$scope.init();
 });
 
-MOMApp.controller('TeamMembersCtrl', function($scope, $log, $cookies, teamMembersService, userService) {
+MOMApp.controller('TeamMembersCtrl', function($scope, $log, $cookies, teamMembersService, userService, windowService) {
 	var locals = {
-		restApi: null
+		restApi: null,
+        screenType: windowService.getScreenType()
 	};
 	
 	$scope.init = function() {
+        $scope.screenType = locals.screenType;
 		locals.restApi = teamMembersService.getRestApi();		
 		$scope.team = locals.restApi.getAll();
 		$scope.form = {
@@ -752,9 +845,10 @@ MOMApp.controller('LoginCtrl', function($scope, $log, $cookies, userService) {
 	$scope.init();
 });
 
-MOMApp.controller('ReportsCtrl', function($scope, $location, $filter, $log, $cookies, momService) {
+MOMApp.controller('ReportsCtrl', function($scope, $location, $filter, $log, $cookies, momService, windowService) {
 	var locals = {
-		momRestApi: null
+		momRestApi: null,
+        screenType: windowService.getScreenType()
 	};
 	
 	$scope.init = function() {
@@ -763,7 +857,7 @@ MOMApp.controller('ReportsCtrl', function($scope, $location, $filter, $log, $coo
 		locals.momRestApi = momService.getRestApi();
 		
 		$scope.dateFormat = 'MM/DD/YYYY';
-		
+		$scope.screenType = locals.screenType;
 		$scope.list = locals.momRestApi.getAll({}, function(data) {
 			for(var i = 0;i < $scope.list.length;i++) {
 				$scope.list[i].createdOn = moment($scope.list[i].createdOn);

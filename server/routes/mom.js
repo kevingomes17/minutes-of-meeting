@@ -15,7 +15,7 @@ router.get('/', function(req, res, next) {
 	]}, 
 	function (err, items) {
 		if (err) return next(err);
-		res.jsonp(items);
+		res.json(items);
 	}).populate('minutesTaker').populate('project').populate('attendees').populate('items.owner');
   
 });
@@ -33,7 +33,7 @@ router.post('/', function(req, res, next) {
 router.get('/:id', function(req, res, next) {
   Mom.findById(req.params.id, function (err, post) {
     if (err) return next(err);
-    res.jsonp(post);
+    res.json(post);
   }).populate('minutesTaker').populate('project').populate('attendees').populate('items.owner');
 });
 
