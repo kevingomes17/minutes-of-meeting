@@ -13,7 +13,7 @@ MOMApp.config(['$routeProvider',
       }).
       when('/projects/:action/:projectId', {
         templateUrl: 'templates/project-edit.html',
-        controller: 'ProjectsCtrl'
+        controller: 'ProjectAddEditCtrl'
       }).
 	  when('/team-members', {
         templateUrl: 'templates/team-members.html',
@@ -624,7 +624,7 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 				
 		if($scope.mom._id == null) {				
 			locals.restApi.save({}, $scope.mom, function(res) {
-                $log.debug(res);
+                //$log.debug(res);
 				$scope.form.action = 'edit';
 				$scope.mom._id = res._id;
 				$scope.form.title = $scope.mom.title+' - '+$scope.mom.createdOn.format('MM/DD/YYYY')+' ('+locals.action+')';
@@ -646,30 +646,26 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 });
 
 /**
- * Projects landing page controller.
+ *
  * Functions:
- * - Displays list of projects
- * - Add/Edit Project
  * - Edit Project using the proejct-edit.html template when on small screen devices.
  */
-MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $routeParams, $location, projectsService, teamMembersService, userService, windowService) {
-	var locals = {
+MOMApp.controller('ProjectAddEditCtrl', function($scope, $log, $filter, $cookies, $routeParams, $location, projectsService, teamMembersService, userService, windowService) {
+    var locals = {
 		restApi: null,
-		membersRestApi: null,
-        screenType: windowService.getScreenType()
+		membersRestApi: null
 	};
     
-	$scope.init = function() {
-        $scope.screenType = locals.screenType;
-		locals.restApi = projectsService.getRestApi();
+    $scope.init = function() {
+        locals.restApi = projectsService.getRestApi();
 		locals.membersRestApi = teamMembersService.getRestApi();
 		$scope.currentUser = userService.getUserCookie();
         
         $scope.form = {
-			title: 'Add Project',
+			title: 'Update Project',
 			errorMessage: '',
 			successMessage: '',
-			project: projectsService.getNewProject()
+			project: null
 		};
         
         $scope.team = locals.membersRestApi.getAll(null, function(data) {
@@ -701,15 +697,105 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $rou
                         }
                     }
                 }
-            } else {
-                if(projectsService.getActiveProject() != null) {
+            }
+        });        
+    };
+    
+    $scope.prepareProjectForEdit = function(project) {
+        var selectedMembers = $filter('filter')($scope.team, {isChecked: true});
+		for(var i = 0;i < selectedMembers.length;i++) {
+			selectedMembers[i].isChecked = false;
+		}
+		
+		for(var i = 0;i < project.teamMembers.length;i++) {
+			for(var j = 0;j < $scope.team.length;j++) {
+				if($scope.team[j]._id == project.teamMembers[i]._id) {
+					$scope.team[j].isChecked = true;
+					break;
+				}
+			}
+		}
+	};
+    
+    $scope.deleteProject = function() {
+		locals.restApi.delete({id: $scope.form.project._id}, function(res) {
+            $location.path('/projects');
+		}, function(err) {
+            $scope.form.errorMessage = 'Error deleting Project! Please try again.';
+        });
+	};
+    
+    $scope.saveProject = function() {
+		if(!angular.equals($scope.form.project.name, '')) {
+			$scope.form.errorMessage = '';
+			if($scope.form.project._id != null) { //PUT		
+				var selectedMembers = $filter('filter')($scope.team, {isChecked: true});
+				$scope.form.project.teamMembers = selectedMembers;
+		
+				locals.restApi.update({id: $scope.form.project._id}, $scope.form.project, function(res) {					
+					$scope.form.successMessage = 'Successfully updated Project.';					
+				}, function(err) {
+					$scope.form.errorMessage = 'Error saving Data! ' + err;
+				});
+			} else { //POST
+				var selectedMembers = $filter('filter')($scope.team, {isChecked: true});
+				$scope.form.project.teamMembers = selectedMembers;
+				
+				locals.restApi.save({}, $scope.form.project, function(res) {
+                    //$log.debug(res);
+					$scope.form.successMessage = 'Successfully created Project.';                    
+					$scope.form.project = res;
+					$scope.form.title = 'Update Project';
+					$scope.prepareProjectForEdit($scope.form.project);
+                    if(locals.screenType == 'md' || locals.screenType == 'lg') {
+                        $scope.projects.push(res);
+                    }
+				}, function(err) {
+					$scope.form.errorMessage = 'Error saving Data! ' + err;
+				});
+			}
+		} else {
+			$scope.form.errorMessage = "Please enter Team Member's name.";
+		}
+	};
+    
+    $scope.init();
+});
+
+/**
+ * Projects landing page controller.
+ * Functions:
+ * - Displays list of projects
+ * - Add/Edit Project
+ */
+MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $routeParams, $location, projectsService, teamMembersService, userService, windowService) {
+	var locals = {
+		restApi: null,
+		membersRestApi: null,
+        screenType: windowService.getScreenType()
+	};
+    
+	$scope.init = function() {
+        $scope.screenType = locals.screenType;
+		locals.restApi = projectsService.getRestApi();
+		locals.membersRestApi = teamMembersService.getRestApi();
+		$scope.currentUser = userService.getUserCookie();
+        
+        $scope.form = {
+			title: 'Add Project',
+			errorMessage: '',
+			successMessage: '',
+			project: projectsService.getNewProject()
+		};
+        
+        $scope.team = locals.membersRestApi.getAll(null, function(data) {
+            if(projectsService.getActiveProject() != null) {
+                if(locals.screenType == 'md' || locals.screenType == 'lg') {                    
                     $scope.edit(projectsService.getActiveProject());
                 }
             }
         });
-        if(typeof $routeParams.projectId == 'undefined') { //The project is not in edit mode.
-		  $scope.projects = locals.restApi.getAll();
-        }
+        $scope.projects = locals.restApi.getAll();
 	};
 	
 	$scope.edit = function(project) {
@@ -774,7 +860,7 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $rou
 				$scope.form.project.teamMembers = selectedMembers;
 				
 				locals.restApi.save({}, $scope.form.project, function(res) {
-                    $log.debug(res);
+                    //$log.debug(res);
 					$scope.form.successMessage = 'Successfully created Project.';                    
 					$scope.form.project = res;
 					$scope.form.title = 'Update Project';
