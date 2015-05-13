@@ -24,10 +24,10 @@
 							<td width="120" valign="top"><u>{{item.category}}</u></td>
 							<td>
 								<span ng-if="!angular.equals(item.type, '')">{{item.type}}:</span> <span ng-bind-html="item.description"></span>
-							</td>
-							<td width="300" ng-if="!angular.equals(item.owner, null) || !angular.equals(item.status, '') || !angular.equals(item.dueDate, '')">
-								Owner: {{item.owner.initials}}, Status: {{item.status}} 
-								<span ng-if="!angular.equals(item.dueDate, '')">, Due: {{item.dueDate.format('MM/DD/YYYY')}}</span>
+                                <div width="300" ng-if="!angular.equals(item.owner, null) || !angular.equals(item.status, '') || !angular.equals(item.dueDate, '')">
+								    Owner: {{item.owner.initials}}, Status: {{item.status}} 
+								    <span ng-if="!angular.equals(item.dueDate, '')">, Due: {{item.dueDate.format('MM/DD/YYYY')}}</span>
+							 </div>
 							</td>
 						</tr>
 					</table>
