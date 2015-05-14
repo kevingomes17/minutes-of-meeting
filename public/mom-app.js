@@ -107,6 +107,7 @@ MOMApp.factory('momService', function($http, $q, $log, $timeout, $resource, $cac
     //callback: 'JSON_CALLBACK'
 	var restApi = $resource(url, {}, {
         'query': {method: 'GET', url: '/api/mom', isArray:true, cache: locals.cache},
+        'getAll': {method: 'GET', url: '/api/mom', isArray:true, cache: locals.cache},
 		'getById': {method: 'GET', url: '/api/mom/:id', cache: locals.cache},
 		'delete': {method: 'DELETE', url: '/api/mom/:id', interceptor: locals.interceptor},
 		'update': {method: 'PUT', url: '/api/mom/:id', interceptor: locals.interceptor},

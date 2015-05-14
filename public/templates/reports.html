@@ -20,7 +20,8 @@
 						<input type="text" class="form-control" placeholder="Search people, project, meeting title.." ng-model="searchmom"/> <br/>
 						<ul style="padding-left: 0;">
 							<li class="list-group-item" ng-repeat="mom in list | filter:searchmom | orderBy : 'createdOn' : true ">
-								<input type="checkbox" ng-model="mom.isChecked" ng-click="momClicked()"> <span>{{mom.title}} [{{mom.createdOn.format(dateFormat)}}], <strong>Project:</strong> {{mom.project.name}}</span>						
+								<input type="checkbox" ng-model="mom.isChecked" ng-click="momClicked()"> <span>{{mom.title}} [{{mom.createdOn.format(dateFormat)}}] 
+                                <span style="display: block;"><strong>Project:</strong> {{mom.project.name}}</span> </span>						
 							</li>
 						</ul>
 					</div>
