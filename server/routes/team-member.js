@@ -9,7 +9,7 @@ var TeamMember = require('../models/TeamMember.js');
 router.get('/', function(req, res, next) {
   TeamMember.find(function (err, items) {
     if (err) return next(err);
-    res.jsonp(items);
+    res.json(items);
   });
 });
 

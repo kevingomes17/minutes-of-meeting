@@ -12,12 +12,16 @@ MOMApp.config(['$routeProvider',
         controller: 'ProjectsCtrl'
       }).
       when('/projects/:action/:projectId', {
-        templateUrl: 'templates/project-edit.html',
+        templateUrl: 'templates/project-form.html',
         controller: 'ProjectAddEditCtrl'
       }).
 	  when('/team-members', {
         templateUrl: 'templates/team-members.html',
         controller: 'TeamMembersCtrl'
+      }).
+      when('/team-members/:action/:memberId', {
+        templateUrl: 'templates/team-member-form.html',
+        controller: 'TeamMemberAddEditCtrl'
       }).
 	  when('/reports', {
         templateUrl: 'templates/reports.html',
@@ -221,14 +225,26 @@ MOMApp.factory('windowService', function($log, $window) {
     return factory;
 });
 
-MOMApp.factory('teamMembersService', function($http, $q, $log, $resource) {
+MOMApp.factory('teamMembersService', function($http, $q, $log, $resource, $cacheFactory) {
 	var url = '/api/team-members';
-	var restApi = $resource(url, {
-		callback: 'JSON_CALLBACK'
-	}, {
-		'getAll': {method: 'JSONP', isArray: true, cache: true},
-		'delete': {method: 'DELETE', url: '/api/team-members/:id'},
-		'update': {method: 'PUT', url: '/api/team-members/:id'}
+    
+    var locals = {
+        cache: $cacheFactory('teamMembersService'),
+        interceptor: {
+            response: function (response) {
+                locals.cache.remove(url);
+                return response.data;
+            }
+        },
+        activeMember: null
+    };
+    
+	var restApi = $resource(url, {}, {
+		'getAll': {method: 'GET', isArray: true, cache: locals.cache},
+        'getById': {method: 'GET', url: '/api/team-members/:id', cache: locals.cache},
+		'delete': {method: 'DELETE', url: '/api/team-members/:id', interceptor: locals.interceptor},
+		'update': {method: 'PUT', url: '/api/team-members/:id', interceptor: locals.interceptor},
+        'save': {method: 'POST', url: '/api/team-members', interceptor: locals.interceptor}
 	});
 		
 	var factory = {};
@@ -249,6 +265,14 @@ MOMApp.factory('teamMembersService', function($http, $q, $log, $resource) {
 		};
 		return member;
 	};
+    
+    factory.setActiveMember = function(member) {
+        locals.activeMember = member;
+    };
+    
+    factory.getActiveMember = function() {
+        return locals.activeMember;
+    };
 	
 	return factory;
 }); 
@@ -792,6 +816,8 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $rou
             if(projectsService.getActiveProject() != null) {
                 if(locals.screenType == 'md' || locals.screenType == 'lg') {                    
                     $scope.edit(projectsService.getActiveProject());
+                } else {
+                    $scope.form.project = projectsService.getActiveProject();
                 }
             }
         });
@@ -894,7 +920,86 @@ MOMApp.controller('ProjectsCtrl', function($scope, $log, $filter, $cookies, $rou
 	$scope.init();
 });
 
-MOMApp.controller('TeamMembersCtrl', function($scope, $log, $cookies, teamMembersService, userService, windowService) {
+MOMApp.controller('TeamMemberAddEditCtrl', function($scope, $log, $cookies, $routeParams, $location, teamMembersService, userService, windowService) {
+    var locals = {
+		restApi: null
+	};
+    
+    $scope.init = function() {
+		locals.restApi = teamMembersService.getRestApi();		
+		
+		$scope.form = {
+			title: 'Add Member',
+			errorMessage: '',
+			successMessage: '',
+			member: teamMembersService.getNewMember()
+		};
+		$scope.currentUser = userService.getUserCookie();	
+        
+        if($routeParams.action == 'edit') {
+            if(teamMembersService.getActiveMember() == null) {
+                //kevin
+                var memberId = $routeParams.memberId;
+                if(typeof $routeParams.memberId != 'undefined') {
+                    var member = locals.restApi.getById({id: memberId}, function(data) {
+                        $scope.edit(member);
+                    });
+                }
+            } else {
+                $scope.edit(teamMembersService.getActiveMember());
+            }
+        }
+	};
+    
+    $scope.edit = function(member) {
+		$scope.form.member = member;
+		$scope.form.title = 'Update Member: '+$scope.form.member.name;
+		$scope.form.action = 'edit';
+		$scope.form.successMessage = '';
+		$scope.form.errorMessage = '';
+	};
+	
+	$scope.deleteMember = function() {
+		locals.restApi.delete({id: $scope.form.member._id}, function(res) {
+			$location.path('/team-members');
+		}, function(err) {});
+	};
+	
+	$scope.saveMember = function() {
+		if(!angular.equals($scope.form.member.name, '')) {
+			$scope.form.errorMessage = '';
+			if($scope.form.member._id != null) { //PUT
+				locals.restApi.update({id: $scope.form.member._id}, $scope.form.member, function(res) {
+					//TODO: Show Success message.
+					$scope.form.successMessage = 'Successfully updated Team Member.';
+					//$scope.team = locals.restApi.getAll();
+				}, function(err) {
+					$scope.form.errorMessage = 'Error saving Data! ' + err;
+				});
+			} else { //POST
+				locals.restApi.save({}, $scope.form.member, function(res) {
+					$scope.form.successMessage = 'Successfully created Team Member.';
+					$scope.form.member = res;
+					$scope.form.title = 'Update Member';
+					$scope.form.action = 'edit';
+					$scope.team.push(res);
+				}, function(err) {
+					$scope.form.errorMessage = 'Error saving Data! ' + err;
+				});
+			}
+		} else {
+			$scope.form.errorMessage = "Please enter Team Member's name.";
+		}
+	};
+		
+	$scope.init();
+});
+
+/**
+ *
+ * 
+ */
+MOMApp.controller('TeamMembersCtrl', function($scope, $log, $cookies, $location, teamMembersService, userService, windowService) {
 	var locals = {
 		restApi: null,
         screenType: windowService.getScreenType()
@@ -911,14 +1016,28 @@ MOMApp.controller('TeamMembersCtrl', function($scope, $log, $cookies, teamMember
 			member: teamMembersService.getNewMember()
 		};
 		$scope.currentUser = userService.getUserCookie();		
+        
+        if(teamMembersService.getActiveMember() != null) {
+            if(locals.screenType == 'md' || locals.screenType == 'lg') {                    
+                $scope.edit(teamMembersService.getActiveMember());
+            } else {
+                $scope.form.member = teamMembersService.getActiveMember();
+            }
+        }
 	};
 	
 	$scope.edit = function(member) {
-		$scope.form.member = member;
-		$scope.form.title = 'Update Member: '+$scope.form.member.name;
-		$scope.form.action = 'edit';
-		$scope.form.successMessage = '';
-		$scope.form.errorMessage = '';
+        $scope.form.member = member;
+        teamMembersService.setActiveMember(member);
+        
+        if(locals.screenType == 'md' || locals.screenType == 'lg') {            
+            $scope.form.title = 'Update Member: '+$scope.form.member.name;
+            $scope.form.action = 'edit';
+            $scope.form.successMessage = '';
+            $scope.form.errorMessage = '';
+        } else {
+            $location.path('/team-members/edit/'+member._id);   
+        }
 	};
 	
 	$scope.deleteMember = function() {
@@ -958,10 +1077,14 @@ MOMApp.controller('TeamMembersCtrl', function($scope, $log, $cookies, teamMember
 	};
 	
 	$scope.resetForm = function() {
-		$scope.form.member = teamMembersService.getNewMember();
-		$scope.form.title = 'Add Member';
-		$scope.form.action = 'add';
-		$scope.form.errorMessage = '';
+        if(locals.screenType == 'md' || locals.screenType == 'lg') {
+            $scope.form.member = teamMembersService.getNewMember();
+            $scope.form.title = 'Add Member';
+            $scope.form.action = 'add';
+            $scope.form.errorMessage = '';
+        } else {
+            $location.path('/team-members/add/0');
+        }
 	};
 	
 	$scope.init();
