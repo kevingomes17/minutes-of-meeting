@@ -1018,6 +1018,7 @@ MOMApp.controller('TeamMembersCtrl', function($scope, $log, $cookies, $location,
 		};
 		$scope.currentUser = userService.getUserCookie();		
         
+        $scope.teamMemberSearchText = '';
         if(teamMembersService.getActiveMember() != null) {
             if(locals.screenType == 'md' || locals.screenType == 'lg') {                    
                 $scope.edit(teamMembersService.getActiveMember());

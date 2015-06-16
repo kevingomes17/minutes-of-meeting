@@ -1,13 +1,25 @@
 <div class="container-fluid">
 	<div class="row">
 		<div class="col-xs-12">
-			<h3>Projects <span class="label label-default" style="cursor: pointer;" ng-click="resetForm()">Add Project</span></h3><hr/>
+            <div class="input-group">
+              <span class="input-group-addon">
+                  <strong>Projects</strong>
+                </span>
+                <span class="input-group-addon">
+                <span class="glyphicon glyphicon-plus" style="cursor: pointer;" ng-click="resetForm()"></span>
+              </span>
+                <span class="input-group-addon">
+                <span class="glyphicon glyphicon-search"></span>
+              </span>              
+              <input type="text" class="form-control" aria-label="..." placeholder="Search Project" ng-model="projectSearchText">
+            </div><!-- /input-group -->
+			<hr/>
 			
 			<div class="row">
                 <div ng-if="screenType == 'xs' || screenType == 'sm'"  class="col-xs-12">
 					<div ng-if="projects.length == 0">-No Projects available-</div>
 					<ul ng-if="projects.length > 0" class="list-group">
-						<li class="list-group-item" ng-repeat="project in projects | orderBy : 'name'" ng-click="edit(project)" style="cursor: pointer;" ng-class="{'active': (project._id == form.project._id)}">
+						<li class="list-group-item" ng-repeat="project in projects | filter : projectSearchText | orderBy : 'name'" ng-click="edit(project)" style="cursor: pointer;" ng-class="{'active': (project._id == form.project._id)}">
 							<h4 class="list-group-item-heading">{{project.name}}</h4>
 							<p class="list-group-item-text">{{project.description}}</p>		
 						</li>
@@ -16,7 +28,7 @@
 				<div ng-if="screenType == 'md' || screenType == 'lg'"  class="col-xs-3">
 					<div ng-if="projects.length == 0">-No Projects available-</div>
 					<ul ng-if="projects.length > 0" class="list-group">
-						<li class="list-group-item" ng-repeat="project in projects | orderBy : 'name'" ng-click="edit(project)" style="cursor: pointer;" ng-class="{'active': (project._id == form.project._id)}">
+						<li class="list-group-item" ng-repeat="project in projects | filter : projectSearchText | orderBy : 'name'" ng-click="edit(project)" style="cursor: pointer;" ng-class="{'active': (project._id == form.project._id)}">
 							<h4 class="list-group-item-heading">{{project.name}}</h4>
 							<p class="list-group-item-text">{{project.description}}</p>		
 						</li>
@@ -35,9 +47,12 @@
 					
 					<br/>
 					<fieldset class="team-members-wrapper">
-						<strong>Members</strong>
+						<div class="input-group input-group-sm">
+                          <span class="input-group-addon" id="basic-addon1">Members</span>
+                          <input type="text" class="form-control" placeholder="Search members" aria-describedby="basic-addon1" ng-model="teamMemberSearchText">
+                        </div>
 						<ul>
-							<li style="list-style: none;" ng-repeat="member in team | orderBy : 'name'"><input type="checkbox" ng-model="member.isChecked"/>{{member.name}}({{member.email}})</li>
+							<li style="list-style: none;" ng-repeat="member in team | filter : teamMemberSearchText | orderBy : 'name'"><input type="checkbox" ng-model="member.isChecked"/>{{member.name}}({{member.email}})</li>
 						</ul>						
 					</fieldset>
 					

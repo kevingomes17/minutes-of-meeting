@@ -1,13 +1,26 @@
 <div class="container-fluid">
 	<div class="row">
 		<div class="col-xs-12">
-			<h3>Team Members <span class="label label-default" style="cursor: pointer;" ng-click="resetForm()">Add Member</span></h3><hr/>
+			
+            <div class="input-group">
+              <span class="input-group-addon">
+                  <strong>Team Members</strong>
+                </span>
+                <span class="input-group-addon">
+                <span class="glyphicon glyphicon-plus" style="cursor: pointer;" ng-click="resetForm()"></span>
+              </span>
+                <span class="input-group-addon">
+                <span class="glyphicon glyphicon-search"></span>
+              </span>              
+              <input type="text" class="form-control" aria-label="..." placeholder="Search Team Member" ng-model="teamMemberSearchText">
+            </div><!-- /input-group -->
+            <hr/>
 			
 			<div class="row">
                 <div ng-if="screenType == 'xs' || screenType == 'sm'" class="col-xs-12">
 					<div ng-if="team.length == 0">-No Team Members available-</div>
 					<ul ng-if="team.length > 0" class="list-group">
-						<li class="list-group-item" ng-repeat="member in team | orderBy : 'name'" ng-click="edit(member)" style="cursor: pointer;" ng-class="{'active': (member._id == form.member._id)}">
+						<li class="list-group-item" ng-repeat="member in team | filter : teamMemberSearchText | orderBy : 'name'" ng-click="edit(member)" style="cursor: pointer;" ng-class="{'active': (member._id == form.member._id)}">
 							<h4 class="list-group-item-heading">{{member.name}}</h4>
 							<p class="list-group-item-text">{{member.email}}</p>		
 						</li>
@@ -16,7 +29,7 @@
 				<div ng-if="screenType == 'md' || screenType == 'lg'" class="col-xs-3">
 					<div ng-if="team.length == 0">-No Team Members available-</div>
 					<ul ng-if="team.length > 0" class="list-group">
-						<li class="list-group-item" ng-repeat="member in team | orderBy : 'name'" ng-click="edit(member)" style="cursor: pointer;" ng-class="{'active': (member._id == form.member._id)}">
+						<li class="list-group-item" ng-repeat="member in team | filter : teamMemberSearchText | orderBy : 'name'" ng-click="edit(member)" style="cursor: pointer;" ng-class="{'active': (member._id == form.member._id)}">
 							<h4 class="list-group-item-heading">{{member.name}}</h4>
 							<p class="list-group-item-text">{{member.email}}</p>		
 						</li>
