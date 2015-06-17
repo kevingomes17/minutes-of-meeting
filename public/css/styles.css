@@ -35,12 +35,15 @@ table.table {
 }
 .attendees-wrapper {
 	margin-top: 2px;
-	overflow: auto; 
-	height: 70px;
+/*	overflow: auto; */
+	min-height: 70px;
+    height: auto;
+    margin-bottom: 15px;
 }
 .toolbar .btn {
 	padding: 2px;
 }
+/*
 .ta-editor {
   min-height: 80px;
   height: auto;
@@ -48,9 +51,25 @@ table.table {
   font-family: inherit;
   font-size: 100%;
 }
+*/
 .ta-hidden-input {
 	display: none;
 }
 li.active .glyphicon {
 	color: #fff;
+}
+.red {
+	color: red;
+}
+.ta-editor, .ta-editor > .ta-bind {
+  min-height: 100px;
+    padding: 0;
+    height: auto;
+}
+.ta-editor > .ta-bind {
+ padding: 2px;   
+}
+.ta-editor > .ta-bind .fa {
+    border: 1px dotted #5bc0de;
+    padding: 2px;
 }

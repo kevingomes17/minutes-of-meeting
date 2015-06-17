@@ -1,4 +1,4 @@
-var MOMApp = angular.module('MOMApp', ['ngRoute', 'ngResource', 'ngCookies', 'ngClipboard', 'ui.bootstrap', 'textAngular', 'ngLoadingSpinner']);
+var MOMApp = angular.module('MOMApp', ['ngRoute', 'ngResource', 'ngCookies', 'ngClipboard', 'ui.bootstrap', 'textAngular', 'ngLoadingSpinner', 'ui.bootstrap.dropdownToggle']);
 
 MOMApp.config(['$routeProvider',
   function($routeProvider) {      
@@ -52,6 +52,339 @@ MOMApp.config(['ngClipProvider', function(ngClipProvider) {
     ngClipProvider.setPath("bower_components/zeroclipboard/dist/ZeroClipboard.swf");
   }]);
 
+MOMApp.config(function($provide) {
+    $provide.decorator('taOptions', ['taRegisterTool', '$delegate', 'taSelection', function(taRegisterTool, taOptions, taSelection){
+        // $delegate is the taOptions we are decorating
+        // register the tool with textAngular        
+        taRegisterTool('colourRed', {
+            iconclass: "fa fa-square red",
+            action: function(){
+                this.$editor().wrapSelection('forecolor', 'red');
+            }
+        });
+        // add the button to the default toolbar definition
+        taOptions.toolbar[1].push('colourRed');
+        
+        var markTextType = function(context, deferred, restoreSelection) {
+            var txt = window.getSelection();
+            var sel = angular.element(taSelection.getSelectionElement()); 
+            var label = context.label;
+                        
+            if(context.iconclass == 'fa fa-calendar') {
+                var d = new Date();
+                var dStr = (d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear();
+                label = label+': '+dStr;    
+            }
+            
+            if(sel.hasClass('item-type-assigned')) {
+                var spanEl;
+                var spans = sel.find('span');
+                for(var i = 0;i < spans.length;i++) {
+                    spanEl = angular.element(spans[i]);
+                    if(spanEl.hasClass('fa-item-type')) {
+                        if(spanEl.hasClass(context.iconclass)) {
+                            spanEl.remove();
+                            sel.removeClass('item-type-assigned')
+                        } else {
+                            spanEl.attr('class', context.iconclass+' fa-item-type').html(' '+label);
+                        }
+                        break;
+                    }
+                }
+            } else {
+                sel.addClass('item-type-assigned').append(' <span class="'+context.iconclass+' fa-item-type"> '+label+'</span>&nbsp;');
+            }
+        };
+        
+        var markTextStatus = function(context, deferred, restoreSelection) {
+            var txt = window.getSelection();
+            var sel = angular.element(taSelection.getSelectionElement()); 
+            var label = context.label;
+                        
+            if(sel.hasClass('item-status-assigned')) {
+                var spanEl;
+                var spans = sel.find('span');
+                for(var i = 0;i < spans.length;i++) {
+                    spanEl = angular.element(spans[i]);
+                    if(spanEl.hasClass('fa-item-status')) {
+                        if(spanEl.hasClass(context.iconclass)) {
+                            spanEl.remove();
+                            sel.removeClass('item-status-assigned')
+                        } else {
+                            spanEl.attr('class', context.iconclass+' fa-item-status').html(' '+label);
+                        }
+                        break;
+                    }
+                }
+            } else {
+                sel.addClass('item-status-assigned').append(' <span class="'+context.iconclass+' fa-item-status"> '+label+'</span>&nbsp;');
+            }
+        };
+        
+        var markTextOwner = function(context) {
+            var txt = window.getSelection();
+            var sel = angular.element(taSelection.getSelectionElement()); 
+            var label = context.label;
+                        
+            if(sel.hasClass('item-owner-assigned')) {
+                var spanEl;
+                var spans = sel.find('span');
+                for(var i = 0;i < spans.length;i++) {
+                    spanEl = angular.element(spans[i]);
+                    if(spanEl.hasClass('fa-item-owner')) {
+                        if(spanEl.hasClass(context.iconclass)) {
+                            spanEl.remove();
+                            sel.removeClass('item-owner-assigned')
+                        } else {
+                            spanEl.attr('class', context.iconclass+' fa-item-owner').html(' '+label);
+                        }
+                        break;
+                    }
+                }
+            } else {
+                sel.addClass('item-owner-assigned').append(' <span class="'+context.iconclass+' fa-item-owner"> '+label+'</span>&nbsp;');
+            }
+        };
+                
+        taRegisterTool('type_todo', {  
+            label: 'Todo',
+            iconclass: "fa fa-tag",
+            action: function(deferred, restoreSelection) {
+                markTextType(this, deferred, restoreSelection);
+            },
+            activeState: function(commonElement) {
+                var flag = false;
+                if(typeof commonElement != 'undefined') {                    
+                    if(commonElement.find('span').hasClass(this.iconclass)) {   
+                        flag = true;
+                    }
+                }
+                return flag;
+            }
+        });
+        // add the button to the default toolbar definition
+        taOptions.toolbar[1].push('type_todo');
+        
+        taRegisterTool('type_issue', {  
+            label: 'Issue',
+            iconclass: "fa fa-flag",
+            action: function(deferred, restoreSelection) {
+                markTextType(this, deferred, restoreSelection);
+            },
+            activeState: function(commonElement) {
+                var flag = false;
+                if(typeof commonElement != 'undefined') {
+                    if(commonElement.find('span').hasClass(this.iconclass)) {      
+                        flag = true;
+                    }
+                }
+                return flag;
+            }
+        });
+        // add the button to the default toolbar definition
+        taOptions.toolbar[1].push('type_issue');
+        
+        taRegisterTool('type_question', {  
+            label: 'Query',
+            iconclass: "fa fa-question",
+            action: function(deferred, restoreSelection) {
+                markTextType(this, deferred, restoreSelection);
+            },
+            activeState: function(commonElement) {
+                var flag = false;
+                if(typeof commonElement != 'undefined') {
+                    if(commonElement.find('span').hasClass(this.iconclass)) {      
+                        flag = true;
+                    }
+                }
+                return flag;
+            }
+        });
+        // add the button to the default toolbar definition
+        taOptions.toolbar[1].push('type_question');
+        
+        taRegisterTool('type_decision', {  
+            label: 'Decision',
+            iconclass: "fa fa-bullhorn",
+            action: function(deferred, restoreSelection) {
+                markTextType(this, deferred, restoreSelection);
+            },
+            activeState: function(commonElement) {
+                var flag = false;
+                if(typeof commonElement != 'undefined') {
+                    if(commonElement.find('span').hasClass(this.iconclass)) {      
+                        flag = true;
+                    }
+                }
+                return flag;
+            }
+        });
+        // add the button to the default toolbar definition
+        taOptions.toolbar[1].push('type_decision');
+        
+        taRegisterTool('type_info', {  
+            label: 'Info',
+            iconclass: "fa fa-info-circle",
+            action: function(deferred, restoreSelection) {
+                markTextType(this, deferred, restoreSelection);
+            },
+            activeState: function(commonElement) {
+                var flag = false;
+                if(typeof commonElement != 'undefined') {
+                    if(commonElement.find('span').hasClass(this.iconclass)) {      
+                        flag = true;
+                    }
+                }
+                return flag;
+            }
+        });
+        // add the button to the default toolbar definition
+        taOptions.toolbar[1].push('type_info');
+        
+        taRegisterTool('type_idea', {  
+            label: 'Idea',
+            iconclass: "fa fa-star",
+            action: function(deferred, restoreSelection) {
+                markTextType(this, deferred, restoreSelection);
+            },
+            activeState: function(commonElement) {
+                var flag = false;
+                if(typeof commonElement != 'undefined') {
+                    if(commonElement.find('span').hasClass(this.iconclass)) {      
+                        flag = true;
+                    }
+                }
+                return flag;
+            }
+        });
+        // add the button to the default toolbar definition
+        taOptions.toolbar[1].push('type_idea');
+        
+        taRegisterTool('type_calendar', {
+            label: 'Complete by',
+            iconclass: "fa fa-calendar",
+            action: function(deferred, restoreSelection) {
+                markTextType(this, deferred,restoreSelection);
+            },
+            activeState: function(commonElement) {
+                var flag = false;
+                if(typeof commonElement != 'undefined') {
+                    if(commonElement.find('span').hasClass(this.iconclass)) {   
+                        flag = true;
+                    }
+                }
+                return flag;
+            }
+        });
+        // add the button to the default toolbar definition
+        taOptions.toolbar[1].push('type_calendar');
+        
+        taRegisterTool('status_new', {
+            label: 'New',
+            iconclass: "fa fa-plus-circle",
+            action: function(deferred, restoreSelection) {
+                markTextStatus(this, deferred, restoreSelection);
+            },
+            activeState: function(commonElement) {
+                var flag = false;
+                if(typeof commonElement != 'undefined') {
+                    if(commonElement.find('span').hasClass(this.iconclass)) {      
+                        flag = true;
+                    }
+                }
+                return flag;
+            }
+        });
+        // add the button to the default toolbar definition
+        taOptions.toolbar[1].push('status_new');
+        
+        taRegisterTool('status_progress', {  
+            label: 'In Progress',
+            iconclass: "fa fa-spinner",
+            action: function(deferred, restoreSelection) {
+                markTextStatus(this, deferred, restoreSelection);
+            },
+            activeState: function(commonElement) {
+                var flag = false;
+                if(typeof commonElement != 'undefined') {
+                    if(commonElement.find('span').hasClass(this.iconclass)) {      
+                        flag = true;
+                    }
+                }
+                return flag;
+            }
+        });
+        // add the button to the default toolbar definition
+        taOptions.toolbar[1].push('status_progress');
+        
+        taRegisterTool('status_done', {  
+            label: 'Done',
+            iconclass: "fa fa-check-circle",
+            action: function(deferred, restoreSelection) {
+                markTextStatus(this, deferred, restoreSelection);
+            },
+            activeState: function(commonElement) {
+                var flag = false;
+                if(typeof commonElement != 'undefined') {
+                    if(commonElement.find('span').hasClass(this.iconclass)) {   
+                        flag = true;
+                    }
+                }
+                return flag;
+            }
+        });
+        // add the button to the default toolbar definition
+        taOptions.toolbar[1].push('status_done');
+        
+        taRegisterTool('teamMembers', {
+            iconclass: 'fa fa-user',
+            label: 'MemberName',
+            action: function(event, teamMember) {          
+                markTextOwner(this);
+            },
+            activeState: function(commonElement) {
+                var flag = false;
+                if(typeof commonElement != 'undefined') {
+                    if(commonElement.find('span').hasClass(this.iconclass)) {   
+                        flag = true;
+                    }
+                }
+                return flag;
+            }
+        });
+        // add the button to the default toolbar definition
+        taOptions.toolbar[1].push('teamMembers');
+        
+//        taRegisterTool('teamMembers', {
+//            display: "<span class='bar-btn-dropdown dropdown'>" +
+//            "<span class='dropdown-toggle' type='button' ng-disabled='showHtml()'><i class='fa fa-user'></i><i class='fa fa-caret-down'></i></span>" +
+//            "<ul class='dropdown-menu'><li ng-repeat='o in options'><span ng-click='action($event, o)'>{{o.name}}</span></li></ul></span>",
+//            action: function(event, teamMember) {          
+//                //Ask if event is really an event.
+//                if (!!event.stopPropagation) {            
+//                    markTextOwner(teamMember);          
+//                }
+//            },
+//            options: [{
+//              label: 'Kevin Gomes',
+//              iconclass: "fa fa-user fa-user-1",
+//              name: 'Kevin Gomes',
+//              email: 'kevin.gomes@royalcyber.com',
+//              initials: 'KG'
+//            }, {
+//              label: 'User 2',
+//              iconclass: "fa fa-user fa-user-2",
+//              name: 'User 2',
+//              email: 'user2@royalcyber.com',
+//              initials: 'U2'
+//            }]
+//        });
+//        // add the button to the default toolbar definition
+//        taOptions.toolbar[1].push('teamMembers');
+        
+        return taOptions;
+    }]);
+});
 /**
  * "userService" that exposes the User API as an ngResource.
  * This is also used to share data between different User Controllers.
@@ -127,7 +460,7 @@ MOMApp.factory('momService', function($http, $q, $log, $timeout, $resource, $cac
 			minutesTaker: null, //{name: '', email: ''}
 			attendees: [], //Array of {name: '', email: ''}
 			items: [
-				{category: '', description: '', owner: null, status: '', dueDate: '', type: '', richText: false}
+				{category: '', description: '', owner: null, status: '', dueDate: '', type: '', richText: true}
 			]
 		};
 		return mom;
@@ -501,7 +834,7 @@ MOMApp.controller('MOMFormCtrl', function($scope, $log, $routeParams, $filter, $
 			},
 			
 			addRow: function() {
-				$scope.mom.items.push({category: '', description: '', owner: null, status: '', dueDate: '', type: '', richText: false});
+				$scope.mom.items.push({category: '', description: '', owner: null, status: '', dueDate: '', type: '', richText: true});
 			},
 			
 			removeEmpty: function() {
