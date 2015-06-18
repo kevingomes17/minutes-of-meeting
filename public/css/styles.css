@@ -73,3 +73,6 @@ li.active .glyphicon {
     border: 1px dotted #5bc0de;
     padding: 2px;
 }
+.mom-details-wrapper .topic {
+    padding: 5px;
+}

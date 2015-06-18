@@ -32,14 +32,14 @@
 					
 					<div id="mom-content" ng-if="selectedMoms.length > 0">
 						<h4>Report generated on [{{today.format('MM/DD/YYYY')}}]</h4>
-						<table class="table" ng-repeat="mom in selectedMoms">
-							<tr ng-repeat="item in mom.items">
-								<td width="150" valign="top"><u>{{item.category}}</u></td>
-								<td>
-									<span ng-if="!angular.equals(item.type, '')">{{item.type}}:</span> <span ng-bind-html="item.description"></span>
-								</td>
-							</tr>
-						</table>
+						<div class="mom-details-wrapper" ng-repeat="mom in selectedMoms">
+							<div ng-repeat="item in mom.items">
+								<div ng-if="item.category != ''" class="topic alert alert-info">Topic: {{item.category | uppercase}}</div>
+								<div>
+									<span ng-bind-html="item.description"></span>
+								</div>
+							</div>
+						</div>
 					</div>
 					
 					<div class="buttons-wrapper" ng-if="selectedMoms.length > 0">
